@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import '../styles/App.css'
-import Profile from './Profile.js';
-import Signin from './Signin.js';
+import Profile from './Profile';
+import Signin from './Signin';
 import { UserSession } from 'blockstack';
 import { appConfig } from '../assets/constants'
 
