@@ -1,0 +1,13 @@
+{
+  "name": "Free the Market",
+  "description": "A simple decentralized e-commerce",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone"
+}
