@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
-import { Switch, Route } from 'react-router-dom'
+import { Switch, Route, Router } from 'react-router-dom'
 import '../styles/App.css'
 import Profile from './Profile';
 import Signin from './Signin';
 import { UserSession } from 'blockstack';
 import { appConfig } from '../utils/constants'
+import CreateProduct from './CreateProduct';
 
 const userSession = new UserSession({ appConfig })
 
@@ -34,6 +35,9 @@ export default function App() {
           <Signin userSession={userSession} handleSignIn={handleSignIn} />
           :
           <Switch>
+            <Route path='/products/new/'>
+              <CreateProduct userSession={userSession} />
+            </Route>
             <Route
               path='/:username?'
               render={
@@ -48,6 +52,6 @@ export default function App() {
           </Switch>
         }
       </div>
-    </div>
+    </div >
   );
 }
