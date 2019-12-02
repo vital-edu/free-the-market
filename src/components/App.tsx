@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Switch, Route, Router } from 'react-router-dom'
+import { Switch, Route } from 'react-router-dom'
 import '../styles/App.css'
 import Profile from './Profile';
 import Signin from './Signin';

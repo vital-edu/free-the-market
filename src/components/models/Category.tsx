@@ -1,0 +1,17 @@
+export enum Category {
+  servicos = 'Serviços',
+  veiculos = 'Veículos',
+  tecnologia = 'Tecnologia',
+  eletrodomesticos = 'Casa e Eletrodomésticos',
+  acessoriosVeiculos = 'Acessórios para Veículos',
+  esporteLazer = 'Esporte e Lazer',
+  joias = 'Joias e Relógios',
+  brinquedos = 'Brinquedos e Bebês',
+  ferramentas = 'Ferramntas e Indústria',
+  beleza = 'Beleza e Cuidado Pessoal',
+  moda = 'Moda',
+  imoveis = 'Imóveis',
+  supermecado = 'Supermecado',
+  livros = 'Livros, Revistas e Comics',
+  outros = 'Outros',
+}
