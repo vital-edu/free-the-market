@@ -5,22 +5,28 @@ import {
   UserSession,
 } from 'blockstack';
 import NavBar from './NavBar'
-import { appConfig } from '../assets/constants'
+import { appConfig } from '../utils/constants'
 import '../styles/Profile.css'
+import { Status } from './models/Status';
 
 const avatarFallbackImage = './avatar-placeholder.png'
 
-export default function Profile(props) {
+export default function Profile(props: {
+  userSession: UserSession,
+  handleSignOut(e: React.MouseEvent): void,
+  match: {
+    params: {
+      username: string,
+    },
+  },
+}) {
   const { userSession, handleSignOut } = props
   const isLocal = props.match.params.username ? false : true
 
-  const [statuses, setStatuses] = useState([])
-  const [person, setPerson] = useState({
-    name: () => 'Anonymous',
-    avatarUrl: () => avatarFallbackImage
-  })
-  const [username, setUsername] = useState('')
-  const [newStatus, setNewStatus] = useState('')
+  const [statuses, setStatuses] = useState<Array<Status>>([])
+  const [person, setPerson] = useState<Person>()
+  const [username, setUsername] = useState<string>('')
+  const [newStatus, setNewStatus] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -34,7 +40,7 @@ export default function Profile(props) {
       const options = { decrypt: false }
       userSession.getFile('statuses.json', options)
         .then((file) => {
-          var statuses = JSON.parse(file || '[]')
+          var statuses = JSON.parse(file as string || '[]')
           setPerson(new Person(userSession.loadUserData().profile))
           setUsername(userSession.loadUserData().username)
           setStatuses(statuses)
@@ -57,7 +63,7 @@ export default function Profile(props) {
       const options = { username: username, decrypt: false }
       userSession.getFile('statuses.json', options)
         .then((file) => {
-          var statuses = JSON.parse(file || '[]')
+          var statuses = JSON.parse(file as string || '[]')
           setStatuses(statuses)
         })
         .catch((error) => {
@@ -69,26 +75,26 @@ export default function Profile(props) {
     }
   }, [isLocal, props.match.params.username, userSession])
 
-  const handleNewStatusSubmit = (event) => {
+  const handleNewStatusSubmit = (e: React.MouseEvent) => {
     saveNewStatus(newStatus)
     setNewStatus('')
   }
 
-  const handleNewStatusChange = (event) => {
-    setNewStatus(event.target.value)
+  const handleNewStatusChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewStatus(e.target.value)
   }
 
-  const saveNewStatus = (statusText) => {
-    let status = {
-      id: statuses.length + 1,
+  const saveNewStatus = (statusText: string) => {
+    let newStatus: Status = {
+      id: `${statuses.length + 1}`,
       text: statusText.trim(),
       created_at: Date.now()
     }
 
-    statuses.unshift(status)
+    const newStatuses: Array<Status> = [newStatus, ...statuses]
     const options = { encrypt: false }
-    userSession.putFile('statuses.json', JSON.stringify(statuses), options)
-      .then(() => setStatuses(statuses))
+    userSession.putFile('statuses.json', JSON.stringify(newStatuses), options)
+      .then(() => setStatuses(newStatuses))
   }
 
   return (
@@ -159,5 +165,7 @@ export default function Profile(props) {
 }
 
 Profile.defaultProps = {
-  userSession: new UserSession(appConfig)
+  userSession: new UserSession({
+    appConfig,
+  })
 };

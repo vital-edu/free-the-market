@@ -1,7 +1,11 @@
 import React from 'react';
 import '../styles/Signin.css'
+import { UserSession } from 'blockstack';
 
-export default function Signin(props) {
+export default function Signin(props: {
+  userSession: UserSession,
+  handleSignIn(e: React.MouseEvent): void,
+}) {
   const { handleSignIn } = props;
 
   return (
@@ -12,7 +16,7 @@ export default function Signin(props) {
         <button
           className="btn btn-primary btn-lg"
           id="signin-button"
-          onClick={handleSignIn.bind(this)}
+          onClick={handleSignIn}
         >
           Entrar com Blockstack
         </button>
