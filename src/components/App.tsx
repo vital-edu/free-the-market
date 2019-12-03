@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Switch, Route } from 'react-router-dom'
-import '../styles/App.css'
 import Profile from './Profile';
 import Signin from './Signin';
 import { UserSession, Person } from 'blockstack';
-import { appConfig } from '../utils/constants'
+import { appConfig, theme } from '../utils/constants'
 import CreateProduct from './products/new';
 import ListProducts from './products';
 import NavBar from './NavBar';
+import { ThemeProvider } from '@material-ui/core';
 
 const userSession = new UserSession({ appConfig })
 
@@ -45,31 +45,33 @@ export default function App() {
 
   return (
     <div className="site-wrapper">
-      <NavBar username={username} user={person} signOut={handleSignOut} />
       <div className="site-wrapper-inner">
-        {!userSession.isUserSignedIn() ?
-          <Signin userSession={userSession} handleSignIn={handleSignIn} />
-          :
-          <Switch>
-            <Route path='/products/new'>
-              <CreateProduct userSession={userSession} />
-            </Route>
-            <Route path='/products'>
-              <ListProducts userSession={userSession} />
-            </Route>
-            <Route
-              path='/:username?'
-              render={
-                routeProps =>
-                  <Profile
-                    userSession={userSession}
-                    handleSignOut={handleSignOut}
-                    {...routeProps}
-                  />
-              }
-            />
-          </Switch>
-        }
+        <ThemeProvider theme={theme}>
+          <NavBar username={username} user={person} signOut={handleSignOut} />
+          {!userSession.isUserSignedIn() ?
+            <Signin userSession={userSession} handleSignIn={handleSignIn} />
+            :
+            <Switch>
+              <Route path='/products/new'>
+                <CreateProduct userSession={userSession} />
+              </Route>
+              <Route
+                path='/profile/:username?'
+                render={
+                  routeProps =>
+                    <Profile
+                      userSession={userSession}
+                      handleSignOut={handleSignOut}
+                      {...routeProps}
+                    />
+                }
+              />
+              <Route path='/'>
+                <ListProducts userSession={userSession} />
+              </Route>
+            </Switch>
+          }
+        </ThemeProvider>
       </div>
     </div >
   );
