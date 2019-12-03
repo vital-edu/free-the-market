@@ -2,17 +2,19 @@ import React from 'react'
 import '../styles/NavBar.css'
 import {
   AccountCircle,
+  ShoppingCartRounded,
+  ExitToAppRounded,
 } from '@material-ui/icons'
 import {
   AppBar,
   Button,
   createStyles,
-  Link,
   IconButton,
   makeStyles,
   Theme,
   Toolbar,
   Typography,
+  Badge,
 } from '@material-ui/core'
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -62,6 +64,11 @@ export default function NavBar(props: {
           </Typography>
           {user && (
             <div>
+              <IconButton color="default">
+                <Badge badgeContent={4}>
+                  <ShoppingCartRounded />
+                </Badge>
+              </IconButton>
               <IconButton
                 aria-label="account of current user"
                 aria-controls="menu-appbar"
@@ -79,6 +86,9 @@ export default function NavBar(props: {
                   />
                   : <AccountCircle />
                 }
+              </IconButton>
+              <IconButton color="default" onClick={signOut}>
+                <ExitToAppRounded />
               </IconButton>
             </div>
           )}

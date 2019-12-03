@@ -42,6 +42,8 @@ export default function CreateProduct(props: { userSession: UserSession }) {
   const [uf, setUF] = useState(UF.digital)
   const [, setMyProducts] = useState<Array<Product>>([])
 
+  // remove all products from user
+  // props.userSession.putFile('products.json', JSON.stringify([]), { encrypt: false })
   useEffect(() => {
     const options = { decrypt: false }
     props.userSession.getFile('products.json', options)
