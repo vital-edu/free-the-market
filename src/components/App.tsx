@@ -5,7 +5,7 @@ import Profile from './Profile';
 import Signin from './Signin';
 import { UserSession } from 'blockstack';
 import { appConfig } from '../utils/constants'
-import CreateProduct from './CreateProduct';
+import CreateProduct from './products/new';
 
 const userSession = new UserSession({ appConfig })
 

@@ -11,9 +11,9 @@ import OutlinedInput from '@material-ui/core/OutlinedInput'
 import InputAdornment from '@material-ui/core/InputAdornment'
 import Button from '@material-ui/core/Button'
 import { makeStyles, Theme, createStyles } from '@material-ui/core/styles'
-import { Category } from './models/Category'
-import { UF } from './models/UF'
-import { Product } from './models/Product'
+import { Category } from '../../models/Category'
+import { UF } from '../../models/UF'
+import { Product } from '../../models/Product'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -45,7 +45,7 @@ export default function CreateProduct(props: { userSession: UserSession }) {
       .catch((error) => {
         console.log('could not fetch products')
       })
-  }, [])
+  })
 
   const onDrop = (newPhotos: Array<File>) => {
     setPhotos([...photos, ...newPhotos]);

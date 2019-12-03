@@ -7,7 +7,7 @@ import {
 import NavBar from './NavBar'
 import { appConfig } from '../utils/constants'
 import '../styles/Profile.css'
-import { Status } from './models/Status';
+import { Status } from '../models/Status';
 
 const avatarFallbackImage = './avatar-placeholder.png'
 
