@@ -31,12 +31,15 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export default function NavBar(props: {
-  username: string,
-  user: any,
-  signOut(e: React.MouseEvent): void,
-}) {
-  const { username, user, signOut } = props
+interface NavBarProps {
+  username: string;
+  user: any;
+  signOut(e: React.MouseEvent): void;
+  numberOfProductsOnCart: number;
+}
+
+export default function NavBar(props: NavBarProps) {
+  const { username, user, signOut, numberOfProductsOnCart } = props
 
   const classes = useStyles();
 
@@ -65,7 +68,7 @@ export default function NavBar(props: {
           {user && (
             <div>
               <IconButton color="default">
-                <Badge badgeContent={4}>
+                <Badge badgeContent={numberOfProductsOnCart}>
                   <ShoppingCartRounded />
                 </Badge>
               </IconButton>

@@ -29,9 +29,18 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export default function ListProducts(props: { userSession: UserSession }) {
+interface ListProductsProps {
+  userSession: UserSession;
+  cartManager: {
+    cart: Array<Product>;
+    setCart: React.Dispatch<React.SetStateAction<Product[]>>;
+  }
+}
+
+export default function ListProducts(props: ListProductsProps) {
   const classes = useStyles();
 
+  const { cart, setCart } = props.cartManager
   const [products, setProducts] = useState<Array<Product>>([])
 
   useEffect(() => {
@@ -46,11 +55,18 @@ export default function ListProducts(props: { userSession: UserSession }) {
       })
   }, [props.userSession])
 
+  const handleAddProductToCart = (product: Product) => {
+    setCart([...cart, product])
+  }
+
   return (
     <div className={classes.root}>
       <GridList cellHeight={160} className={classes.gridList} cols={3}>
         {products.map((product: Product) => (
-          <PreviewProduct product={product} />
+          <PreviewProduct
+            product={product}
+            addProductToCart={handleAddProductToCart}
+          />
         ))}
       </GridList>
     </div>

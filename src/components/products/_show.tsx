@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Button,
   createStyles,
   makeStyles,
   Theme,
@@ -33,9 +34,18 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export default function PreviewProduct(props: { product: Product }) {
+interface PreviewProductProps {
+  product: Product;
+  addProductToCart(product: Product): void
+}
+
+export default function PreviewProduct(props: PreviewProductProps) {
   const classes = useStyles();
   const { product } = props;
+
+  const onHandleAddProductToCart = () => {
+    props.addProductToCart(product)
+  }
 
   return (
     <div className={classes.root}>
@@ -63,12 +73,17 @@ export default function PreviewProduct(props: { product: Product }) {
                   ID: {product.id}
                 </Typography>
               </Grid>
-              <Grid item>
+              <Grid item alignContent="center">
                 <Typography
                   align="center"
                   variant="body2"
-                  style={{ cursor: 'pointer' }}>
-                  Comprar
+                >
+                  <Button
+                    color="primary"
+                    onClick={onHandleAddProductToCart}
+                  >
+                    Comprar
+                </Button>
                 </Typography>
               </Grid>
             </Grid>

@@ -8,6 +8,7 @@ import CreateProduct from './products/new';
 import ListProducts from './products';
 import NavBar from './NavBar';
 import { ThemeProvider } from '@material-ui/core';
+import { Product } from '../models/Product';
 
 const userSession = new UserSession({ appConfig })
 
@@ -15,6 +16,7 @@ export default function App() {
   const [person, setPerson] = useState<Person>()
   const [username, setUsername] = useState<string>('')
   const [isUserSigned, setIsUserSigned] = useState(false)
+  const [cart, setCart] = useState<Array<Product>>([])
 
   useEffect(() => {
     if (userSession.isSignInPending()) {
@@ -47,7 +49,12 @@ export default function App() {
     <div className="site-wrapper">
       <div className="site-wrapper-inner">
         <ThemeProvider theme={theme}>
-          <NavBar username={username} user={person} signOut={handleSignOut} />
+          <NavBar
+            username={username}
+            user={person}
+            signOut={handleSignOut}
+            numberOfProductsOnCart={cart.length}
+          />
           {!userSession.isUserSignedIn() ?
             <Signin userSession={userSession} handleSignIn={handleSignIn} />
             :
@@ -67,7 +74,10 @@ export default function App() {
                 }
               />
               <Route path='/'>
-                <ListProducts userSession={userSession} />
+                <ListProducts
+                  userSession={userSession}
+                  cartManager={{ cart, setCart }}
+                />
               </Route>
             </Switch>
           }
