@@ -6,6 +6,7 @@ import Signin from './Signin';
 import { UserSession } from 'blockstack';
 import { appConfig } from '../utils/constants'
 import CreateProduct from './products/new';
+import ListProducts from './products';
 
 const userSession = new UserSession({ appConfig })
 
@@ -35,8 +36,11 @@ export default function App() {
           <Signin userSession={userSession} handleSignIn={handleSignIn} />
           :
           <Switch>
-            <Route path='/products/new/'>
+            <Route path='/products/new'>
               <CreateProduct userSession={userSession} />
+            </Route>
+            <Route path='/products'>
+              <ListProducts userSession={userSession} />
             </Route>
             <Route
               path='/:username?'
