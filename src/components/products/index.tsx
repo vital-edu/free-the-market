@@ -33,7 +33,7 @@ interface ListProductsProps {
   userSession: UserSession;
   cartManager: {
     cart: Array<Product>;
-    setCart: React.Dispatch<React.SetStateAction<Product[]>>;
+    setCart(products: Array<Product>): void;
   }
 }
 

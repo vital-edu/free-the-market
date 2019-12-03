@@ -12,11 +12,16 @@ import { Product } from '../models/Product';
 
 const userSession = new UserSession({ appConfig })
 
+const _initializeCart = () => {
+  const json = localStorage.getItem('cart')
+  return json ? JSON.parse(json) : []
+}
+
 export default function App() {
   const [person, setPerson] = useState<Person>()
   const [username, setUsername] = useState<string>('')
   const [isUserSigned, setIsUserSigned] = useState(false)
-  const [cart, setCart] = useState<Array<Product>>([])
+  const [cart, _setCart] = useState<Array<Product>>(_initializeCart)
 
   useEffect(() => {
     if (userSession.isSignInPending()) {
@@ -34,6 +39,11 @@ export default function App() {
       setIsUserSigned(false)
     }
   }, [isUserSigned])
+
+  const setCart = (products: Array<Product>) => {
+    localStorage.setItem('cart', JSON.stringify(products))
+    _setCart(products)
+  }
 
   const handleSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
