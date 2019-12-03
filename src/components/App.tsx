@@ -14,24 +14,24 @@ const userSession = new UserSession({ appConfig })
 export default function App() {
   const [person, setPerson] = useState<Person>()
   const [username, setUsername] = useState<string>('')
+  const [isUserSigned, setIsUserSigned] = useState(false)
 
   useEffect(() => {
     if (userSession.isSignInPending()) {
       userSession.handlePendingSignIn().then((userData) => {
         window.history.replaceState({}, document.title, "/")
+        setIsUserSigned(true)
       });
-    }
-  })
-
-  useEffect(() => {
-    if (userSession.isUserSignedIn()) {
+    } else if (userSession.isUserSignedIn()) {
       setPerson(new Person(userSession.loadUserData().profile))
       setUsername(userSession.loadUserData().username)
+      setIsUserSigned(true)
     } else {
       setPerson(undefined)
       setUsername('')
+      setIsUserSigned(false)
     }
-  }, [userSession])
+  }, [isUserSigned])
 
   const handleSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
