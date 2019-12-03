@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import { UserSession } from 'blockstack'
 import ImageUploader from 'react-images-upload'
-import Grid from '@material-ui/core/Grid'
-import TextField from '@material-ui/core/TextField'
-import InputLabel from '@material-ui/core/InputLabel'
-import MenuItem from '@material-ui/core/MenuItem'
-import FormControl from '@material-ui/core/FormControl'
-import Select from '@material-ui/core/Select'
-import OutlinedInput from '@material-ui/core/OutlinedInput'
-import InputAdornment from '@material-ui/core/InputAdornment'
-import Button from '@material-ui/core/Button'
-import { makeStyles, Theme, createStyles } from '@material-ui/core/styles'
+import {
+  Button,
+  createStyles,
+  FormControl,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  makeStyles,
+  MenuItem,
+  OutlinedInput,
+  Select,
+  TextField,
+  Theme,
+} from '@material-ui/core'
 import { Category } from '../../models/Category'
 import { UF } from '../../models/UF'
 import { Product } from '../../models/Product'
