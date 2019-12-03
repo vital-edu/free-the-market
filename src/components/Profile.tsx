@@ -100,7 +100,6 @@ export default function Profile(props: {
   return (
     !userSession.isSignInPending() && person ?
       <div className="container">
-        <NavBar username={username} user={person} signOut={handleSignOut} />
         <div className="row">
           <div className="col-md-offset-3 col-md-6">
             <div className="col-md-12">

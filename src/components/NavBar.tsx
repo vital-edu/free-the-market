@@ -10,7 +10,7 @@ export default function NavBar(props: {
   const { username, user, signOut } = props
 
   return (
-    <nav className="navbar navbar-expand-md navbar-dark bg-blue fixed-top">
+    user ? <nav className="navbar navbar-expand-md navbar-dark bg-blue fixed-top">
       <Link className="navbar-brand" to="/">Free the Market</Link>
       <ul className="navbar-nav mr-auto">
         <li className="nav-item">
@@ -30,6 +30,6 @@ export default function NavBar(props: {
       >Sair
       </button>
 
-    </nav>
+    </nav> : null
   )
 }

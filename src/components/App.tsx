@@ -1,16 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Switch, Route } from 'react-router-dom'
 import '../styles/App.css'
 import Profile from './Profile';
 import Signin from './Signin';
-import { UserSession } from 'blockstack';
+import { UserSession, Person } from 'blockstack';
 import { appConfig } from '../utils/constants'
 import CreateProduct from './products/new';
 import ListProducts from './products';
+import NavBar from './NavBar';
 
 const userSession = new UserSession({ appConfig })
 
 export default function App() {
+  const [person, setPerson] = useState<Person>()
+  const [username, setUsername] = useState<string>('')
+
   useEffect(() => {
     if (userSession.isSignInPending()) {
       userSession.handlePendingSignIn().then((userData) => {
@@ -18,6 +22,16 @@ export default function App() {
       });
     }
   })
+
+  useEffect(() => {
+    if (userSession.isUserSignedIn()) {
+      setPerson(new Person(userSession.loadUserData().profile))
+      setUsername(userSession.loadUserData().username)
+    } else {
+      setPerson(undefined)
+      setUsername('')
+    }
+  }, [userSession])
 
   const handleSignIn = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -31,6 +45,7 @@ export default function App() {
 
   return (
     <div className="site-wrapper">
+      <NavBar username={username} user={person} signOut={handleSignOut} />
       <div className="site-wrapper-inner">
         {!userSession.isUserSignedIn() ?
           <Signin userSession={userSession} handleSignIn={handleSignIn} />
