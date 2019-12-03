@@ -1,4 +1,4 @@
-export enum State {
+export enum UF {
   digital = 'Digital',
   ac = 'Acre',
   al = 'Alagoas',
