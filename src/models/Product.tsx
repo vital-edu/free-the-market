@@ -4,7 +4,7 @@ import { UF } from "./UF";
 export interface Product {
   id: string;
   name: string;
-  photos: Array<File>;
+  photos: Array<string>;
   price: number;
   category: Category;
   description: string;

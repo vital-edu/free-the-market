@@ -15,6 +15,7 @@ import { Category } from '../../models/Category'
 import { UF } from '../../models/UF'
 import { Product } from '../../models/Product'
 import uniqid from 'uniqid'
+import * as FileManager from '../../utils/FileManager'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -30,7 +31,7 @@ export default function CreateProduct(props: { userSession: UserSession }) {
   const classes = useStyles();
 
   const [name, setName] = useState('')
-  const [photos, setPhotos] = useState<Array<File>>([])
+  const [photos, setPhotos] = useState<Array<string>>([])
   const [price, setPrice] = useState('0')
   const [category, setCategory] = useState<Category>(Category.servicos)
   const [description, setDescription] = useState('')
@@ -48,9 +49,10 @@ export default function CreateProduct(props: { userSession: UserSession }) {
       .catch((error) => {
         console.log('could not fetch products')
       })
-  }, [])
+  }, [props.userSession])
 
-  const onDrop = (newPhotos: Array<File>) => {
+  const onDrop = async (files: Array<File>) => {
+    const newPhotos = await FileManager.convertFiles(files)
     setPhotos([...photos, ...newPhotos]);
   }
 
@@ -79,7 +81,7 @@ export default function CreateProduct(props: { userSession: UserSession }) {
       id: uniqid('product-'),
       name,
       photos,
-      price: Number(price),
+      price: parseFloat(price),
       category,
       description,
       uf,
