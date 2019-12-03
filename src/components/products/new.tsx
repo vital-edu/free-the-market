@@ -14,6 +14,7 @@ import { makeStyles, Theme, createStyles } from '@material-ui/core/styles'
 import { Category } from '../../models/Category'
 import { UF } from '../../models/UF'
 import { Product } from '../../models/Product'
+import uniqid from 'uniqid'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -27,28 +28,34 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function CreateProduct(props: { userSession: UserSession }) {
   const classes = useStyles();
-  const options = { decrypt: false }
 
+  const [name, setName] = useState('')
   const [photos, setPhotos] = useState<Array<File>>([])
   const [price, setPrice] = useState('0')
   const [category, setCategory] = useState<Category>(Category.servicos)
   const [description, setDescription] = useState('')
   const [uf, setUF] = useState(UF.digital)
-  const [myProducts, setMyProducts] = useState<Array<Product>>([])
+  const [, setMyProducts] = useState<Array<Product>>([])
 
   useEffect(() => {
+    const options = { decrypt: false }
     props.userSession.getFile('products.json', options)
       .then((file) => {
         var products = JSON.parse(file as string || '[]')
         setMyProducts(products)
+        console.log(products)
       })
       .catch((error) => {
         console.log('could not fetch products')
       })
-  })
+  }, [])
 
   const onDrop = (newPhotos: Array<File>) => {
     setPhotos([...photos, ...newPhotos]);
+  }
+
+  const onNameChange = (e: React.ChangeEvent<{ value: string }>) => {
+    setName(e.target.value)
   }
 
   const onPriceChange = (e: React.ChangeEvent<{ value: string }>) => {
@@ -69,6 +76,8 @@ export default function CreateProduct(props: { userSession: UserSession }) {
 
   const onSubmitProduct = () => {
     let newProduct: Product = {
+      id: uniqid('product-'),
+      name,
       photos,
       price: Number(price),
       category,
@@ -76,7 +85,7 @@ export default function CreateProduct(props: { userSession: UserSession }) {
       uf,
     }
 
-    const newProducts = [...myProducts, newProduct]
+    const newProducts = [newProduct]
     const options = { encrypt: false }
     props.userSession.putFile(
       'products.json',
@@ -100,6 +109,8 @@ export default function CreateProduct(props: { userSession: UserSession }) {
         <TextField
           required
           label="Nome do produto/serviço"
+          value={name}
+          onChange={onNameChange}
           fullWidth={true}
           variant="outlined"
         />
