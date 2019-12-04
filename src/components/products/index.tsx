@@ -44,7 +44,7 @@ export default function ListProducts(props: ListProductsProps) {
   const [products, setProducts] = useState<Array<Product>>([])
 
   useEffect(() => {
-    Product.fetchOwnList().then((allProducts) => {
+    Product.fetchList().then((allProducts) => {
       setProducts(allProducts)
     })
   }, [props.userSession])
