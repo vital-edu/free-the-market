@@ -4,13 +4,16 @@ import { UF } from "./UF";
 
 export class Product extends Model {
   static className = 'Product'
-  static schema: ProductSchema
-}
-export interface ProductSchema extends Schema {
-  name: string;
-  photos: Array<string>;
-  price: number;
-  category: Category;
-  description: string;
-  uf: UF;
+  static schema: Schema = {
+    name: String,
+    photos: Array,
+    price: Number,
+    category: Category,
+    description: String,
+    uf: UF,
+  }
+
+  afterFetch() {
+    this.attrs.photos = this.attrs.phothos.map((e: string) => JSON.parse(e))
+  }
 }

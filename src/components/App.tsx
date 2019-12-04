@@ -8,13 +8,13 @@ import CreateProduct from './products/new'
 import ListProducts from './products'
 import NavBar from './NavBar'
 import { ThemeProvider } from '@material-ui/core'
-import { ProductSchema } from '../models/Product'
-import { configure } from 'radiks'
+import { Product } from '../models/Product'
+import { configure, getConfig, User } from 'radiks'
 
 const userSession = new UserSession({ appConfig })
 
 configure({
-  apiServer: 'http://localhost:1260',
+  apiServer: 'http://localhost:4000',
   userSession
 });
 
@@ -27,12 +27,14 @@ export default function App() {
   const [person, setPerson] = useState<Person>()
   const [username, setUsername] = useState<string>('')
   const [isUserSigned, setIsUserSigned] = useState(false)
-  const [cart, _setCart] = useState<Array<ProductSchema>>(_initializeCart)
+  const [cart, _setCart] = useState<Array<Product>>(_initializeCart)
 
   useEffect(() => {
+    const { userSession } = getConfig();
     if (userSession.isSignInPending()) {
-      userSession.handlePendingSignIn().then((userData) => {
+      userSession.handlePendingSignIn().then(async () => {
         window.history.replaceState({}, document.title, "/")
+        await User.createWithCurrentUser();
         setIsUserSigned(true)
       });
     } else if (userSession.isUserSignedIn()) {
@@ -46,7 +48,7 @@ export default function App() {
     }
   }, [isUserSigned])
 
-  const setCart = (products: Array<ProductSchema>) => {
+  const setCart = (products: Array<Product>) => {
     localStorage.setItem('cart', JSON.stringify(products))
     _setCart(products)
   }

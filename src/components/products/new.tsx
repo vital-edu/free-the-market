@@ -17,7 +17,7 @@ import {
 } from '@material-ui/core'
 import { Category } from '../../models/Category'
 import { UF } from '../../models/UF'
-import { ProductSchema } from '../../models/Product'
+import { Product } from '../../models/Product'
 import * as FileManager from '../../utils/FileManager'
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -35,26 +35,10 @@ export default function CreateProduct(props: { userSession: UserSession }) {
 
   const [name, setName] = useState('')
   const [photos, setPhotos] = useState<Array<string>>([])
-  const [price, setPrice] = useState('0')
+  const [price, setPrice] = useState("0")
   const [category, setCategory] = useState<Category>(Category.servicos)
   const [description, setDescription] = useState('')
   const [uf, setUF] = useState(UF.digital)
-  const [, setMyProducts] = useState<Array<ProductSchema>>([])
-
-  // remove all products from user
-  // props.userSession.putFile('products.json', JSON.stringify([]), { encrypt: false })
-  useEffect(() => {
-    const options = { decrypt: false }
-    props.userSession.getFile('products.json', options)
-      .then((file) => {
-        var products = JSON.parse(file as string || '[]')
-        setMyProducts(products)
-        console.log(products)
-      })
-      .catch(() => {
-        console.log('could not fetch products')
-      })
-  }, [props.userSession])
 
   const onDrop = async (files: Array<File>) => {
     const newPhotos = await FileManager.convertFiles(files)
@@ -81,26 +65,23 @@ export default function CreateProduct(props: { userSession: UserSession }) {
     setUF(e.target.value as UF)
   }
 
-  const onSubmitProduct = () => {
-    let newProduct: ProductSchema = {
+  const onSubmitProduct = async () => {
+    const newProduct = new Product({
       name,
       photos,
       price: parseFloat(price),
       category,
       description,
       uf,
-    }
-
-    const newProducts = [newProduct]
-    const options = { encrypt: false }
-    props.userSession.putFile(
-      'products.json',
-      JSON.stringify(newProducts),
-      options,
-    ).then(() => {
-      setMyProducts(newProducts)
-      console.log(newProducts)
     })
+    try {
+      await newProduct.save()
+      window.location.href = '/'
+    } catch (error) {
+      console.log('An error occurred:')
+      console.error(error)
+      console.log('======== END OF THE ERROR MESSAGE ==========')
+    }
   }
 
   return (

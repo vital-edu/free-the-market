@@ -9,7 +9,7 @@ import {
   Paper,
   Typography,
 } from '@material-ui/core';
-import { ProductSchema } from '../../models/Product';
+import { Product } from '../../models/Product';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -35,8 +35,8 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 interface PreviewProductProps {
-  product: ProductSchema;
-  addProductToCart(product: ProductSchema): void
+  product: Product;
+  addProductToCart(product: Product): void
 }
 
 export default function PreviewProduct(props: PreviewProductProps) {
@@ -53,8 +53,8 @@ export default function PreviewProduct(props: PreviewProductProps) {
         <Grid container spacing={2}>
           <Grid item>
             <ButtonBase className={classes.image}>
-              {product.photos[0] && <img
-                src={product.photos[0]}
+              {product.attrs.photos[0] && <img
+                src={product.attrs.photos[0]}
                 width="100%"
                 alt="foto do produto"
               />}
@@ -64,13 +64,10 @@ export default function PreviewProduct(props: PreviewProductProps) {
             <Grid item xs container direction="column" spacing={2}>
               <Grid item xs>
                 <Typography gutterBottom variant="subtitle1">
-                  {product.name}
+                  {product.attrs.name}
                 </Typography>
                 <Typography variant="body2" gutterBottom>
-                  {product.description}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  ID: {product.id}
+                  {product.attrs.description}
                 </Typography>
               </Grid>
               <Grid item alignContent="center">
@@ -88,7 +85,7 @@ export default function PreviewProduct(props: PreviewProductProps) {
               </Grid>
             </Grid>
             <Grid item>
-              <Typography variant="subtitle1">${product.price}</Typography>
+              <Typography variant="subtitle1">${product.attrs.price}</Typography>
             </Grid>
           </Grid>
         </Grid>

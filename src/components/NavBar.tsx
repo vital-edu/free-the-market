@@ -48,7 +48,6 @@ export default function NavBar(props: NavBarProps) {
   };
 
   const handleHomeButton = () => {
-    console.log(window.location.pathname)
     if (window.location.pathname !== '/') {
       window.location.href = '/'
     }
