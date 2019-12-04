@@ -1,16 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'
 import { Switch, Route } from 'react-router-dom'
-import Profile from './Profile';
-import Signin from './Signin';
-import { UserSession, Person } from 'blockstack';
+import Profile from './Profile'
+import Signin from './Signin'
+import { UserSession, Person } from 'blockstack'
 import { appConfig, theme } from '../utils/constants'
-import CreateProduct from './products/new';
-import ListProducts from './products';
-import NavBar from './NavBar';
-import { ThemeProvider } from '@material-ui/core';
-import { Product } from '../models/Product';
+import CreateProduct from './products/new'
+import ListProducts from './products'
+import NavBar from './NavBar'
+import { ThemeProvider } from '@material-ui/core'
+import { ProductSchema } from '../models/Product'
+import { configure } from 'radiks'
 
 const userSession = new UserSession({ appConfig })
+
+configure({
+  apiServer: 'http://localhost:1260',
+  userSession
+});
 
 const _initializeCart = () => {
   const json = localStorage.getItem('cart')
@@ -21,7 +27,7 @@ export default function App() {
   const [person, setPerson] = useState<Person>()
   const [username, setUsername] = useState<string>('')
   const [isUserSigned, setIsUserSigned] = useState(false)
-  const [cart, _setCart] = useState<Array<Product>>(_initializeCart)
+  const [cart, _setCart] = useState<Array<ProductSchema>>(_initializeCart)
 
   useEffect(() => {
     if (userSession.isSignInPending()) {
@@ -40,7 +46,7 @@ export default function App() {
     }
   }, [isUserSigned])
 
-  const setCart = (products: Array<Product>) => {
+  const setCart = (products: Array<ProductSchema>) => {
     localStorage.setItem('cart', JSON.stringify(products))
     _setCart(products)
   }

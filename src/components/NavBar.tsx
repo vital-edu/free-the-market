@@ -39,7 +39,7 @@ interface NavBarProps {
 }
 
 export default function NavBar(props: NavBarProps) {
-  const { username, user, signOut, numberOfProductsOnCart } = props
+  const { user, signOut, numberOfProductsOnCart } = props
 
   const classes = useStyles();
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { UserSession } from 'blockstack';
-import { Product } from '../../models/Product';
+import { ProductSchema } from '../../models/Product';
 import PreviewProduct from './_show';
 import {
   createStyles,
@@ -32,8 +32,8 @@ const useStyles = makeStyles((theme: Theme) =>
 interface ListProductsProps {
   userSession: UserSession;
   cartManager: {
-    cart: Array<Product>;
-    setCart(products: Array<Product>): void;
+    cart: Array<ProductSchema>;
+    setCart(products: Array<ProductSchema>): void;
   }
 }
 
@@ -41,7 +41,7 @@ export default function ListProducts(props: ListProductsProps) {
   const classes = useStyles();
 
   const { cart, setCart } = props.cartManager
-  const [products, setProducts] = useState<Array<Product>>([])
+  const [products, setProducts] = useState<Array<ProductSchema>>([])
 
   useEffect(() => {
     const options = { decrypt: false }
@@ -50,19 +50,19 @@ export default function ListProducts(props: ListProductsProps) {
         const products = JSON.parse(file as string || '[]')
         setProducts(products)
       })
-      .catch((error) => {
+      .catch(() => {
         console.log('could not fetch products')
       })
   }, [props.userSession])
 
-  const handleAddProductToCart = (product: Product) => {
+  const handleAddProductToCart = (product: ProductSchema) => {
     setCart([...cart, product])
   }
 
   return (
     <div className={classes.root}>
       <GridList cellHeight={160} className={classes.gridList} cols={3}>
-        {products.map((product: Product) => (
+        {products.map((product: ProductSchema) => (
           <PreviewProduct
             product={product}
             addProductToCart={handleAddProductToCart}

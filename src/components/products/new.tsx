@@ -17,8 +17,7 @@ import {
 } from '@material-ui/core'
 import { Category } from '../../models/Category'
 import { UF } from '../../models/UF'
-import { Product } from '../../models/Product'
-import uniqid from 'uniqid'
+import { ProductSchema } from '../../models/Product'
 import * as FileManager from '../../utils/FileManager'
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -40,7 +39,7 @@ export default function CreateProduct(props: { userSession: UserSession }) {
   const [category, setCategory] = useState<Category>(Category.servicos)
   const [description, setDescription] = useState('')
   const [uf, setUF] = useState(UF.digital)
-  const [, setMyProducts] = useState<Array<Product>>([])
+  const [, setMyProducts] = useState<Array<ProductSchema>>([])
 
   // remove all products from user
   // props.userSession.putFile('products.json', JSON.stringify([]), { encrypt: false })
@@ -52,7 +51,7 @@ export default function CreateProduct(props: { userSession: UserSession }) {
         setMyProducts(products)
         console.log(products)
       })
-      .catch((error) => {
+      .catch(() => {
         console.log('could not fetch products')
       })
   }, [props.userSession])
@@ -83,8 +82,7 @@ export default function CreateProduct(props: { userSession: UserSession }) {
   }
 
   const onSubmitProduct = () => {
-    let newProduct: Product = {
-      id: uniqid('product-'),
+    let newProduct: ProductSchema = {
       name,
       photos,
       price: parseFloat(price),

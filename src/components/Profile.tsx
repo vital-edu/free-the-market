@@ -4,7 +4,6 @@ import {
   lookupProfile,
   UserSession,
 } from 'blockstack';
-import NavBar from './NavBar'
 import { appConfig } from '../utils/constants'
 import '../styles/Profile.css'
 import { Status } from '../models/Status';

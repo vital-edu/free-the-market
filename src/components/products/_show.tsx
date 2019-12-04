@@ -9,7 +9,7 @@ import {
   Paper,
   Typography,
 } from '@material-ui/core';
-import { Product } from '../../models/Product';
+import { ProductSchema } from '../../models/Product';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -35,8 +35,8 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 interface PreviewProductProps {
-  product: Product;
-  addProductToCart(product: Product): void
+  product: ProductSchema;
+  addProductToCart(product: ProductSchema): void
 }
 
 export default function PreviewProduct(props: PreviewProductProps) {
