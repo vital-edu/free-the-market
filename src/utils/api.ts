@@ -20,10 +20,17 @@ export async function getInputs(
     const input: PsbtInputExtended = {
       index: 0,
       hash: json.hash,
-      nonWitnessUtxo: Buffer.from(json.hex, 'hex'),
-      witnessScript: payment!!.redeem!!.output,
+      witnessUtxo: getWitnessUtxo(json.outputs[1]),
+      redeemScript: payment!!.redeem!!.output,
+      witnessScript: payment!!.redeem!!.redeem!!.output,
     }
 
     return input
   }))
+}
+
+function getWitnessUtxo(out: any): any {
+  delete out.address;
+  out.script = Buffer.from(out.script, 'hex');
+  return out;
 }

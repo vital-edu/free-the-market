@@ -43,22 +43,29 @@ export default function TransactionPage() {
       userPublicKey,
       sellerPublicKey,
       escrowPublicKey,
-    ].map(hex => Buffer.from(hex, 'hex'))
+    ].map(hex => Buffer.from(hex, 'hex')).sort()
 
-    const payment = bitcoin.payments.p2sh({
-      redeem: bitcoin.payments.p2ms({
-        m: 2,
-        pubkeys,
-        network: bitcoin.networks.testnet,
-      })
-    })
+    let newPayment;
+    newPayment = bitcoin.payments.p2ms({
+      m: 2,
+      pubkeys: pubkeys,
+      network: bitcoin.networks.testnet,
+    });
+    newPayment = (bitcoin.payments as any)['p2wsh']({
+      redeem: newPayment,
+      newtwork: bitcoin.networks.testnet,
+    });
+    newPayment = (bitcoin.payments as any)['p2sh']({
+      redeem: newPayment,
+      newtwork: bitcoin.networks.testnet,
+    });
 
-    console.log(payment.redeem!!.output!!.toString('hex'))
-    // console.log(payment.output!!.toString('hex'))
+    console.log(newPayment.redeem!!.output!!.toString('hex'))
+    console.log('payment.output: ' + newPayment!!.output!!.toString('hex'))
 
-    setRedeemScript(payment!!.redeem!!.output!!.toString('hex'))
-    setPayment(payment)
-    setGeneratedAddress(payment.address as string)
+    setRedeemScript(newPayment!!.redeem!!.output!!.toString('hex'))
+    setPayment(newPayment)
+    setGeneratedAddress(newPayment.address as string)
   }
 
   const onTransfer = async () => {
@@ -75,24 +82,23 @@ export default function TransactionPage() {
       'hex',
     ))
 
+    const allKeys = [myKeys, sellerKeys, moderatorKeys].sort()
+
     const inputs = await api.getInputs(generatedAddress, payment!!)
 
     console.log(inputs)
-    console.log(inputs[0].nonWitnessUtxo.toString('hex'))
-    console.log(inputs[0].witnessScript.toString('hex'))
+    // console.log(inputs[0].nonWitnessUtxo.toString('hex'))
+    // console.log(inputs[0].witnessScript.toString('hex'))
 
     const psbt = new bitcoin.Psbt({ network: testnet })
       .addInputs(inputs)
       .addOutput({
-        address: process.env.REACT_APP_BTC_ADDRESS,
-        value: 1e5,
+        address: process.env.REACT_APP_BTC_ADDRESS as string,
+        value: 1e4,
       })
-    // .signInput(0, myKeys)
-    // .signInput(0, sellerKeys)
-    // .signInput(0, moderatorKeys)
-    // .signAllInputs(myKeys)
-    // .signAllInputs(sellerKeys)
-    // .signAllInputs(moderatorKeys)
+      .signAllInputs(allKeys[0])
+      .signAllInputs(allKeys[1])
+      .signAllInputs(allKeys[2])
 
     console.log(psbt.toHex())
   }
