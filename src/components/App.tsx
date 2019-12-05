@@ -10,6 +10,7 @@ import NavBar from './NavBar'
 import { ThemeProvider } from '@material-ui/core'
 import { Product } from '../models/Product'
 import { configure, getConfig, User } from 'radiks'
+import Transaction from './TransactionPage'
 
 const userSession = new UserSession({ appConfig })
 
@@ -78,7 +79,7 @@ export default function App() {
             :
             <Switch>
               <Route path='/products/new'>
-                <CreateProduct userSession={userSession} />
+                <CreateProduct />
               </Route>
               <Route
                 path='/profile/:username?'
@@ -91,6 +92,9 @@ export default function App() {
                     />
                 }
               />
+              <Route path='/transactions'>
+                <Transaction />
+              </Route>
               <Route path='/'>
                 <ListProducts
                   userSession={userSession}

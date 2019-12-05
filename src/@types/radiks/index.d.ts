@@ -1,8 +1,8 @@
 declare module 'radiks' {
   import { UserSession } from 'blockstack'
 
-  export function configure(newConfig: Config): void
-  export function getConfig(): Config;
+  function configure(newConfig: Config): void
+  function getConfig(): Config;
 
   type Config = {
     apiServer: string;
