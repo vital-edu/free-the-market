@@ -30,7 +30,7 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export default function CreateProduct(props: { userSession: UserSession }) {
+export default function CreateProduct() {
   const classes = useStyles();
 
   const [name, setName] = useState('')
