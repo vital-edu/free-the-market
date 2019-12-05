@@ -6,7 +6,7 @@ declare module 'radiks' {
 
   type Config = {
     apiServer: string;
-    userSession: any;
+    userSession: UserSession;
   }
 
   type Schema = {
