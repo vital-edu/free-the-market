@@ -57,18 +57,10 @@ export default function TransactionPage() {
   ].sort()
 
   const onCreateTransaction = () => { // 193
-    // keys.forEach(k => {
-    //   console.log(k.publicKey.toString('hex') + '\n' + k.privateKey!!.toString('hex'))
-    // })
-
     let newPayment;
     newPayment = bitcoin.payments.p2ms({
       m: 2,
-      pubkeys: keys.map(key => key.publicKey),
-      network,
-    });
-    newPayment = (bitcoin.payments as any)['p2wsh']({
-      redeem: newPayment,
+      pubkeys: keys.map(key => key.publicKey).sort(),
       network,
     });
     newPayment = (bitcoin.payments as any)['p2sh']({
@@ -86,6 +78,7 @@ export default function TransactionPage() {
 
   const onTransfer = async () => {
     const inputs = await api.getInputs(generatedAddress, payment!!)
+    if (!inputs) return
 
     console.log(inputs)
     console.log(payment!!.output!!)
