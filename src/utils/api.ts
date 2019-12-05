@@ -9,24 +9,33 @@ export async function getInputs(
   const getAddressUrl = `https://api.blockcypher.com/v1/btc/test3/addrs/${address}?unspentOnly=true`
 
   const res = await fetch(getAddressUrl)
-  const json = await res.json()
+  const addressJson = await res.json()
 
-  return Promise.all(json.txrefs.map(async tx => {
+  return Promise.all(addressJson.txrefs.map(async tx => {
     const getTxUrl = `https://api.blockcypher.com/v1/btc/test3/txs/${tx.tx_hash}?includeHex=true`
+    const vout = tx.tx_output_n
 
     const res = await fetch(getTxUrl)
-    const json = await res.json()
+    const txJson = await res.json()
 
     const input: PsbtInputExtended = {
-      index: 0,
-      hash: json.hash,
-      witnessUtxo: getWitnessUtxo(json.outputs[1]),
-      redeemScript: payment!!.redeem!!.output,
-      witnessScript: payment!!.redeem!!.redeem!!.output,
+      index: vout,
+      hash: txJson.hash,
+      witnessUtxo: getWitnessUtxo(txJson.outputs[vout]),
+      witnessScript: payment.redeem!!.redeem!!.output,
+      redeemScript: payment.redeem!!.output,
     }
 
     return input
   }))
+}
+
+export async function propagateTransaction(tx: string) {
+  const res = await fetch('https://api.blockcypher.com/v1/btc/test3/txs/push', {
+    method: 'POST',
+    body: JSON.stringify({ tx })
+  })
+  console.log({ res })
 }
 
 function getWitnessUtxo(out: any): any {
