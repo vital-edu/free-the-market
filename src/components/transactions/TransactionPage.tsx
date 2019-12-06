@@ -13,7 +13,7 @@ import { testnet } from 'bitcoinjs-lib/src/networks'
 import * as api from '../../utils/api'
 import { Product } from '../../models/Product'
 import PreviewProduct from '../products/_show'
-import SellerCard from './_seller'
+import UserCard from './_user'
 import { useHistory } from 'react-router'
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -142,7 +142,7 @@ export default function TransactionPage(props: TransactionPageProps) {
           <PreviewProduct
             product={product}
           />
-          {seller && <SellerCard seller={seller} />}
+          {seller && <UserCard user={seller} />}
           <form noValidate autoComplete="off" className={classes.root}>
             <TextField
               fullWidth={true}

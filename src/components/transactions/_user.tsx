@@ -38,32 +38,32 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const avatarFallbackImage = './../avatar-placeholder.png'
 
-interface SellerCardProps {
-  seller: User;
+interface UserCardProps {
+  user: User;
 }
 
-export default function SellerCard(props: SellerCardProps) {
+export default function UserCard(props: UserCardProps) {
   const classes = useStyles();
 
-  const [seller, setSeller] = useState()
+  const [user, setUser] = useState()
 
   useEffect(() => {
-    lookupProfile(props.seller!!.attrs.username).then((profile) => {
+    lookupProfile(props.user!!.attrs.username).then((profile) => {
       console.log({ person: new Person(profile) })
-      setSeller(new Person(profile))
+      setUser(new Person(profile))
     })
   }, [])
 
   return (
     <div className={classes.root}>
-      {seller &&
+      {user &&
         <Paper className={classes.paper}>
           <Grid container spacing={2}>
             <Grid item>
               <ButtonBase className={classes.image}>
                 <img
-                  src={seller.avatarUrl()
-                    ? seller.avatarUrl()
+                  src={user.avatarUrl()
+                    ? user.avatarUrl()
                     : avatarFallbackImage}
                   width="100%"
                   height="100%"
@@ -78,14 +78,14 @@ export default function SellerCard(props: SellerCardProps) {
                     Informações do Vendedor
                   </Typography>
                   <Typography gutterBottom variant="subtitle2">
-                    {seller._profile.name ? seller._profile.name : 'Pessoa sem Nome'}
+                    {user._profile.name ? user._profile.name : 'Pessoa sem Nome'}
                   </Typography>
                   <Typography gutterBottom variant="subtitle1">
-                    {seller._profile.description && seller._profile.description}
+                    {user._profile.description && user._profile.description}
                     <Button
                       variant="outlined"
                       color="primary"
-                      href={`https://explorer.blockstack.org/name/${seller._id}`}
+                      href={`https://explorer.blockstack.org/name/${user._id}`}
                       target="_blank"
                     >
                       Ver perfil na BlockStack
