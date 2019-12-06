@@ -80,16 +80,13 @@ export default function NavBar(props: NavBarProps) {
                 onClick={handleMenu}
                 color="inherit"
               >
-                {user.avatarUrl() ?
-                  <img
-                    src={user.avatarUrl() ? user.avatarUrl() : './avatar-placeholder.png'}
-                    className="avatar"
-                    width="25"
-                    height="25"
-                    alt=""
-                  />
-                  : <AccountCircle />
-                }
+                <img
+                  src={user.avatarUrl() ? user.avatarUrl() : './avatar-placeholder.png'}
+                  className="avatar"
+                  width="25"
+                  height="25"
+                  alt=""
+                />
               </IconButton>
               <IconButton color="default" onClick={signOut}>
                 <ExitToAppRounded />
