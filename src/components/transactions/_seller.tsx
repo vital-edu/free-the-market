@@ -39,25 +39,19 @@ const useStyles = makeStyles((theme: Theme) =>
 const avatarFallbackImage = './../avatar-placeholder.png'
 
 interface SellerCardProps {
-  sellerId: string;
+  seller: User;
 }
 
 export default function SellerCard(props: SellerCardProps) {
   const classes = useStyles();
 
-  const [seller, setSeller] = useState<any>(null)
+  const [seller, setSeller] = useState()
 
   useEffect(() => {
-    try {
-      User.findById(props.sellerId).then(async (user) => {
-        const profile = await lookupProfile(user!!.attrs.username)
-        console.log({ person: new Person(profile) })
-        setSeller(new Person(profile))
-      })
-
-    } catch (err) {
-      console.log(err)
-    }
+    lookupProfile(props.seller!!.attrs.username).then((profile) => {
+      console.log({ person: new Person(profile) })
+      setSeller(new Person(profile))
+    })
   }, [])
 
   return (
@@ -91,7 +85,7 @@ export default function SellerCard(props: SellerCardProps) {
                     <Button
                       variant="outlined"
                       color="primary"
-                      href={`https://explorer.blockstack.org/name/${props.sellerId}`}
+                      href={`https://explorer.blockstack.org/name/${seller._id}`}
                       target="_blank"
                     >
                       Ver perfil na BlockStack

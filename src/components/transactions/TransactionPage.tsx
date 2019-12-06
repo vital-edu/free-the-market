@@ -44,6 +44,8 @@ export default function TransactionPage(props: TransactionPageProps) {
   const [redeemScript, setRedeemScript] = useState<string>('')
   const [transaction, setTransaction] = useState('')
   const [product, setProduct] = useState<Product>(props.product)
+  const [seller, setSeller] = useState<User | null>()
+  const [escrows, setEscrows] = useState<Array<User>>([])
 
   useEffect(() => {
     console.log(props.product)
@@ -55,6 +57,19 @@ export default function TransactionPage(props: TransactionPageProps) {
       setUserPublicKey(key)
     })
   }, [product])
+
+  useEffect(() => {
+    User.fetchList().then((users) => {
+      const availableEscrows = users.filter((u) => {
+        if (u._id === product.attrs.user_id) {
+          setSeller(u as User)
+          return false
+        }
+        return (u._id !== User.currentUser()._id)
+      }) as Array<User>
+      setEscrows(availableEscrows)
+    })
+  }, [])
 
   const keys = [
     bitcoin.ECPair.fromPrivateKey(Buffer.from(
@@ -127,7 +142,7 @@ export default function TransactionPage(props: TransactionPageProps) {
           <PreviewProduct
             product={product}
           />
-          <SellerCard sellerId={props.product.attrs.user_id} />
+          {seller && <SellerCard seller={seller} />}
           <form noValidate autoComplete="off" className={classes.root}>
             <TextField
               fullWidth={true}
