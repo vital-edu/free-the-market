@@ -93,7 +93,6 @@ export default function App() {
             <Signin userSession={userSession} handleSignIn={handleSignIn} />
             :
             <div>
-
               <Switch>
                 <Route path='/products/new'>
                   <CreateProduct />
@@ -119,9 +118,11 @@ export default function App() {
                   />
                 </Route>
               </Switch>
-              <Fab color="primary" className={classes.addButton}>
-                <AddIcon onClick={() => history.push('/products/new')} />
-              </Fab>
+              {history.location.pathname !== '/products/new' &&
+                <Fab color="primary" className={classes.addButton}>
+                  <AddIcon onClick={() => history.push('/products/new')} />
+                </Fab>
+              }
             </div>
           }
         </ThemeProvider>
