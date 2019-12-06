@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route } from 'react-router-dom'
+import { Switch, Route, Redirect } from 'react-router-dom'
 import Profile from './Profile'
 import Signin from './Signin'
 import { UserSession, Person } from 'blockstack'
@@ -7,10 +7,12 @@ import { appConfig, theme } from '../utils/constants'
 import CreateProduct from './products/new'
 import ListProducts from './products'
 import NavBar from './NavBar'
-import { ThemeProvider } from '@material-ui/core'
+import { Add as AddIcon } from '@material-ui/icons'
+import { ThemeProvider, Fab, makeStyles, Theme, createStyles } from '@material-ui/core'
 import { Product } from '../models/Product'
 import { configure, getConfig, User } from 'radiks'
 import Transaction from './TransactionPage'
+import { useHistory } from "react-router"
 
 const userSession = new UserSession({ appConfig })
 
@@ -24,7 +26,20 @@ const _initializeCart = () => {
   return json ? JSON.parse(json) : []
 }
 
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    addButton: {
+      position: 'absolute',
+      right: 15,
+      bottom: 15,
+    }
+  }),
+);
+
 export default function App() {
+  const classes = useStyles();
+  let history = useHistory()
+
   const [person, setPerson] = useState<Person>()
   const [username, setUsername] = useState<string>('')
   const [isUserSigned, setIsUserSigned] = useState(false)
@@ -77,31 +92,37 @@ export default function App() {
           {!userSession.isUserSignedIn() ?
             <Signin userSession={userSession} handleSignIn={handleSignIn} />
             :
-            <Switch>
-              <Route path='/products/new'>
-                <CreateProduct />
-              </Route>
-              <Route
-                path='/profile/:username?'
-                render={
-                  routeProps =>
-                    <Profile
-                      userSession={userSession}
-                      handleSignOut={handleSignOut}
-                      {...routeProps}
-                    />
-                }
-              />
-              <Route path='/transactions'>
-                <Transaction />
-              </Route>
-              <Route path='/'>
-                <ListProducts
-                  userSession={userSession}
-                  cartManager={{ cart, setCart }}
+            <div>
+
+              <Switch>
+                <Route path='/products/new'>
+                  <CreateProduct />
+                </Route>
+                <Route
+                  path='/profile/:username?'
+                  render={
+                    routeProps =>
+                      <Profile
+                        userSession={userSession}
+                        handleSignOut={handleSignOut}
+                        {...routeProps}
+                      />
+                  }
                 />
-              </Route>
-            </Switch>
+                <Route path='/transactions'>
+                  <Transaction />
+                </Route>
+                <Route path='/'>
+                  <ListProducts
+                    userSession={userSession}
+                    cartManager={{ cart, setCart }}
+                  />
+                </Route>
+              </Switch>
+              <Fab color="primary" className={classes.addButton}>
+                <AddIcon onClick={() => history.push('/products/new')} />
+              </Fab>
+            </div>
           }
         </ThemeProvider>
       </div>
