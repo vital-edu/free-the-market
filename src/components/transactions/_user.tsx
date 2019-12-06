@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Link,
   createStyles,
   makeStyles,
   Theme,
-  ButtonBase,
   Grid,
   Paper,
   Typography,
@@ -40,6 +38,7 @@ const avatarFallbackImage = './../avatar-placeholder.png'
 
 interface UserCardProps {
   user: User;
+  cardTitle?: string;
 }
 
 export default function UserCard(props: UserCardProps) {
@@ -60,32 +59,33 @@ export default function UserCard(props: UserCardProps) {
         <Paper className={classes.paper}>
           <Grid container spacing={2}>
             <Grid item>
-              <ButtonBase className={classes.image}>
-                <img
-                  src={user.avatarUrl()
-                    ? user.avatarUrl()
-                    : avatarFallbackImage}
-                  width="100%"
-                  height="100%"
-                  alt="foto do vendedor"
-                />
-              </ButtonBase>
+              <img
+                src={user.avatarUrl()
+                  ? user.avatarUrl()
+                  : avatarFallbackImage}
+                width="100%"
+                height="100%"
+                alt="foto do vendedor"
+              />
             </Grid>
             <Grid item xs={12} sm container>
               <Grid item xs container direction="column" spacing={2}>
                 <Grid item xs>
-                  <Typography gutterBottom variant="h6">
-                    Informações do Vendedor
-                  </Typography>
+                  {props.cardTitle &&
+                    <Typography gutterBottom variant="h6">
+                      {props.cardTitle}
+                    </Typography>
+                  }
                   <Typography gutterBottom variant="subtitle2">
                     {user._profile.name ? user._profile.name : 'Pessoa sem Nome'}
+                    {` (${props.user._id})`}
                   </Typography>
                   <Typography gutterBottom variant="subtitle1">
                     {user._profile.description && user._profile.description}
                     <Button
                       variant="outlined"
                       color="primary"
-                      href={`https://explorer.blockstack.org/name/${user._id}`}
+                      href={`https://explorer.blockstack.org/name/${props.user._id}`}
                       target="_blank"
                     >
                       Ver perfil na BlockStack

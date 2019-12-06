@@ -15,6 +15,7 @@ import { Product } from '../../models/Product'
 import PreviewProduct from '../products/_show'
 import UserCard from './_user'
 import { useHistory } from 'react-router'
+import EscrowList from './_escrow'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -48,20 +49,21 @@ export default function TransactionPage(props: TransactionPageProps) {
   const [escrows, setEscrows] = useState<Array<User>>([])
 
   useEffect(() => {
-    console.log(props.product)
     if (props.product) {
       setProduct(product)
-    } else history.push('/')
+    } else {
+      history.push('/')
+      return
+    }
 
     User.currentUser().encryptionPublicKey().then((key) => {
       setUserPublicKey(key)
     })
-  }, [product])
 
-  useEffect(() => {
     User.fetchList().then((users) => {
       const availableEscrows = users.filter((u) => {
-        if (u._id === product.attrs.user_id) {
+        console.log(u)
+        if (u._id === props.product.attrs.user_id) {
           setSeller(u as User)
           return false
         }
@@ -69,7 +71,7 @@ export default function TransactionPage(props: TransactionPageProps) {
       }) as Array<User>
       setEscrows(availableEscrows)
     })
-  }, [])
+  }, [product, userPublicKey])
 
   const keys = [
     bitcoin.ECPair.fromPrivateKey(Buffer.from(
@@ -142,8 +144,16 @@ export default function TransactionPage(props: TransactionPageProps) {
           <PreviewProduct
             product={product}
           />
-          {seller && <UserCard user={seller} />}
+          {seller &&
+            <UserCard user={seller} cardTitle="Informações do Vendedor" />
+          }
           <form noValidate autoComplete="off" className={classes.root}>
+            {escrows && <EscrowList
+              escrows={escrows}
+              onSelectedEscrow={(escrow: User) => {
+                console.log(`selected escrow ${escrow._id}`)
+              }}
+            />}
             <TextField
               fullWidth={true}
               label="Outlined"
