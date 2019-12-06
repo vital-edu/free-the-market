@@ -19,6 +19,7 @@ import { Category } from '../../models/Category'
 import { UF } from '../../models/UF'
 import { Product } from '../../models/Product'
 import * as FileManager from '../../utils/FileManager'
+import { useHistory } from 'react-router'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -31,7 +32,8 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 export default function CreateProduct() {
-  const classes = useStyles();
+  const classes = useStyles()
+  const history = useHistory()
 
   const [name, setName] = useState('')
   const [photos, setPhotos] = useState<Array<string>>([])
@@ -76,7 +78,7 @@ export default function CreateProduct() {
     })
     try {
       await newProduct.save()
-      window.location.href = '/'
+      history.push('/')
     } catch (error) {
       console.log('An error occurred:')
       console.error(error)

@@ -16,6 +16,7 @@ import {
   Typography,
   Badge,
 } from '@material-ui/core'
+import { useHistory } from 'react-router';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -40,16 +41,17 @@ interface NavBarProps {
 
 export default function NavBar(props: NavBarProps) {
   const { user, signOut, numberOfProductsOnCart } = props
+  const history = useHistory()
 
   const classes = useStyles();
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    window.location.href = 'profile'
-  };
+    history.push('/profile')
+  }
 
   const handleHomeButton = () => {
-    if (window.location.pathname !== '/') {
-      window.location.href = '/'
+    if (history.location.pathname !== '/') {
+      history.push('/')
     }
   }
 
