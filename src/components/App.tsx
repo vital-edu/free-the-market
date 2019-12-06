@@ -15,7 +15,7 @@ import Transaction from './TransactionPage'
 const userSession = new UserSession({ appConfig })
 
 configure({
-  apiServer: 'http://localhost:4000',
+  apiServer: process.env.REACT_APP_RADIKS_SERVER as string,
   userSession
 });
 
