@@ -1,7 +1,6 @@
 import React from 'react'
 import '../styles/NavBar.css'
 import {
-  AccountCircle,
   ShoppingCartRounded,
   ExitToAppRounded,
 } from '@material-ui/icons'

@@ -11,7 +11,7 @@ import { Add as AddIcon } from '@material-ui/icons'
 import { ThemeProvider, Fab, makeStyles, Theme, createStyles } from '@material-ui/core'
 import { Product } from '../models/Product'
 import { configure, getConfig, User } from 'radiks'
-import Transaction from './TransactionPage'
+import Transaction from './transactions/TransactionPage'
 import { useHistory } from "react-router"
 
 const userSession = new UserSession({ appConfig })

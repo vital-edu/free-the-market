@@ -10,9 +10,11 @@ import {
 import { User } from 'radiks'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
-import * as api from '../utils/api'
-import { Product } from '../models/Product'
-import PreviewProduct from './products/_show'
+import * as api from '../../utils/api'
+import { Product } from '../../models/Product'
+import PreviewProduct from '../products/_show'
+import SellerCard from './_seller'
+import { useHistory } from 'react-router'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -32,6 +34,7 @@ interface TransactionPageProps {
 
 export default function TransactionPage(props: TransactionPageProps) {
   const classes = useStyles()
+  const history = useHistory()
 
   const [userPublicKey, setUserPublicKey] = useState('')
   const [sellerPublicKey] = useState(process.env.REACT_APP_KEY_2 as string)
@@ -40,12 +43,18 @@ export default function TransactionPage(props: TransactionPageProps) {
   const [payment, setPayment] = useState<bitcoin.Payment | null>(null)
   const [redeemScript, setRedeemScript] = useState<string>('')
   const [transaction, setTransaction] = useState('')
+  const [product, setProduct] = useState<Product>(props.product)
 
   useEffect(() => {
+    console.log(props.product)
+    if (props.product) {
+      setProduct(product)
+    } else history.push('/')
+
     User.currentUser().encryptionPublicKey().then((key) => {
       setUserPublicKey(key)
     })
-  })
+  }, [product])
 
   const keys = [
     bitcoin.ECPair.fromPrivateKey(Buffer.from(
@@ -107,86 +116,91 @@ export default function TransactionPage(props: TransactionPageProps) {
   }
 
   return (
-    <Grid
-      container
-      direction="row"
-      justify="center"
-      alignItems="center"
-    >
-      <PreviewProduct
-        product={props.product}
-      />
-      <form noValidate autoComplete="off" className={classes.root}>
-        <TextField
-          fullWidth={true}
-          label="Outlined"
-          variant="outlined"
-          value={userPublicKey}
-        />
-        <TextField
-          fullWidth={true}
-          label="Outlined"
-          variant="outlined"
-          value={sellerPublicKey}
-        />
-        <TextField
-          fullWidth={true}
-          label="Outlined"
-          variant="outlined"
-          value={escrowPublicKey}
-        />
-        <Button
-          fullWidth={true}
-          variant="contained"
-          color="primary"
-          onClick={onCreateTransaction}>
-          Criar transação transação
+    <div>
+      {product ?
+        <Grid
+          container
+          direction="row"
+          justify="center"
+          alignItems="center"
+        >
+          <PreviewProduct
+            product={product}
+          />
+          <SellerCard sellerId={props.product.attrs.user_id} />
+          <form noValidate autoComplete="off" className={classes.root}>
+            <TextField
+              fullWidth={true}
+              label="Outlined"
+              variant="outlined"
+              value={userPublicKey}
+            />
+            <TextField
+              fullWidth={true}
+              label="Outlined"
+              variant="outlined"
+              value={sellerPublicKey}
+            />
+            <TextField
+              fullWidth={true}
+              label="Outlined"
+              variant="outlined"
+              value={escrowPublicKey}
+            />
+            <Button
+              fullWidth={true}
+              variant="contained"
+              color="primary"
+              onClick={onCreateTransaction}>
+              Criar transação transação
         </Button>
-        <Button
-          fullWidth={true}
-          variant="contained"
-          color="primary"
-          onClick={onTransfer}>
-          Confirmar transação
+            <Button
+              fullWidth={true}
+              variant="contained"
+              color="primary"
+              onClick={onTransfer}>
+              Confirmar transação
         </Button>
-        <Button
-          fullWidth={true}
-          variant="contained"
-          color="primary"
-          onClick={onPropagateTransaction}>
-          Confirmar transação
+            <Button
+              fullWidth={true}
+              variant="contained"
+              color="primary"
+              onClick={onPropagateTransaction}>
+              Confirmar transação
         </Button>
-        <TextField
-          fullWidth={true}
-          label="Address"
-          variant="outlined"
-          value={generatedAddress}
-          hidden={generatedAddress === ''}
-          InputProps={{
-            readOnly: true,
-          }}
-        />
-        <TextField
-          fullWidth={true}
-          label="Redeem Script"
-          variant="outlined"
-          value={redeemScript}
-          hidden={redeemScript === ''}
-          InputProps={{
-            readOnly: true,
-          }}
-        />
-        <TextField
-          fullWidth={true}
-          label="Transaction"
-          variant="outlined"
-          value={transaction}
-          hidden={transaction === ''}
-          InputProps={{
-            readOnly: true,
-          }}
-        />
-      </form>
-    </Grid >
+            <TextField
+              fullWidth={true}
+              label="Address"
+              variant="outlined"
+              value={generatedAddress}
+              hidden={generatedAddress === ''}
+              InputProps={{
+                readOnly: true,
+              }}
+            />
+            <TextField
+              fullWidth={true}
+              label="Redeem Script"
+              variant="outlined"
+              value={redeemScript}
+              hidden={redeemScript === ''}
+              InputProps={{
+                readOnly: true,
+              }}
+            />
+            <TextField
+              fullWidth={true}
+              label="Transaction"
+              variant="outlined"
+              value={transaction}
+              hidden={transaction === ''}
+              InputProps={{
+                readOnly: true,
+              }}
+            />
+          </form>
+        </Grid >
+        : null}
+    </div>
   )
 }
