@@ -19,6 +19,7 @@ import { UF } from '../../models/UF'
 import { Product } from '../../models/Product'
 import * as FileManager from '../../utils/FileManager'
 import { useHistory } from 'react-router'
+import { User } from 'radiks'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -74,6 +75,7 @@ export default function CreateProduct() {
       category,
       description,
       uf,
+      user_id: User.currentUser()._id,
     })
     try {
       await newProduct.save()

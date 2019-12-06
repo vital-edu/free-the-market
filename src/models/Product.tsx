@@ -51,7 +51,6 @@ export class Product extends Model {
 
   static defaults = {
     status: ProductStatus.available,
-    user_id: (): string => User.currentUser()._id,
   }
 
   afterFetch() {

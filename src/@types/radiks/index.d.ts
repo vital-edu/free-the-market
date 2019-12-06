@@ -28,7 +28,7 @@ declare module 'radiks' {
 
   class User extends Model {
     className: string;
-    schema: Schema = {
+    static schema: Schema = {
       username: {
         type: String,
         decrypted,
