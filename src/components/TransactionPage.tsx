@@ -11,6 +11,8 @@ import { User } from 'radiks'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
 import * as api from '../utils/api'
+import { Product } from '../models/Product'
+import PreviewProduct from './products/_show'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -24,8 +26,12 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const network = bitcoin.networks.testnet
 
-export default function TransactionPage() {
-  const classes = useStyles();
+interface TransactionPageProps {
+  product: Product
+}
+
+export default function TransactionPage(props: TransactionPageProps) {
+  const classes = useStyles()
 
   const [userPublicKey, setUserPublicKey] = useState('')
   const [sellerPublicKey] = useState(process.env.REACT_APP_KEY_2 as string)
@@ -107,7 +113,9 @@ export default function TransactionPage() {
       justify="center"
       alignItems="center"
     >
-
+      <PreviewProduct
+        product={props.product}
+      />
       <form noValidate autoComplete="off" className={classes.root}>
         <TextField
           fullWidth={true}

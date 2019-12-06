@@ -36,7 +36,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 interface PreviewProductProps {
   product: Product;
-  addProductToCart(product: Product): void
+  addProductToCart?: (product: Product) => void
 }
 
 export default function PreviewProduct(props: PreviewProductProps) {
@@ -44,7 +44,7 @@ export default function PreviewProduct(props: PreviewProductProps) {
   const { product } = props;
 
   const onHandleAddProductToCart = () => {
-    props.addProductToCart(product)
+    props.addProductToCart && props.addProductToCart(product)
   }
 
   return (
@@ -70,22 +70,26 @@ export default function PreviewProduct(props: PreviewProductProps) {
                   {product.attrs.description}
                 </Typography>
               </Grid>
-              <Grid item alignContent="center">
-                <Typography
-                  align="center"
-                  variant="body2"
-                >
-                  <Button
-                    color="primary"
-                    onClick={onHandleAddProductToCart}
-                  >
-                    Comprar
+              {props.addProductToCart &&
+                <Grid item container alignContent="center">
+                  <Grid item xs>
+                    <Typography
+                      align="center"
+                      variant="body2"
+                    >
+                      <Button
+                        color="primary"
+                        onClick={onHandleAddProductToCart}
+                      >
+                        Comprar
                 </Button>
-                </Typography>
-              </Grid>
+                    </Typography>
+                  </Grid>
+                </Grid>
+              }
             </Grid>
             <Grid item>
-              <Typography variant="subtitle1">${product.attrs.price}</Typography>
+              <Typography variant="subtitle1">R${product.attrs.price}</Typography>
             </Grid>
           </Grid>
         </Grid>

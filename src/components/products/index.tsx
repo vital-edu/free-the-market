@@ -7,7 +7,9 @@ import {
   GridList,
   makeStyles,
   Theme,
+  Container,
 } from '@material-ui/core';
+import { useHistory } from 'react-router';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -38,7 +40,8 @@ interface ListProductsProps {
 }
 
 export default function ListProducts(props: ListProductsProps) {
-  const classes = useStyles();
+  const classes = useStyles()
+  const history = useHistory()
 
   const { cart, setCart } = props.cartManager
   const [products, setProducts] = useState<Array<Product>>([])
@@ -51,18 +54,20 @@ export default function ListProducts(props: ListProductsProps) {
 
   const handleAddProductToCart = (product: Product) => {
     setCart([...cart, product])
+    history.push('/transactions/new')
   }
 
   return (
-    <div className={classes.root}>
+    <Container className={classes.root}>
       <GridList cellHeight={160} className={classes.gridList} cols={3}>
-        {products.map((product: Product) => (
+        {products.map((product: Product, idx: number) => (
           <PreviewProduct
+            key={idx}
             product={product}
             addProductToCart={handleAddProductToCart}
           />
         ))}
       </GridList>
-    </div>
+    </Container>
   )
 }

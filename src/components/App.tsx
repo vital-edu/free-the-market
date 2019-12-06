@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, Redirect } from 'react-router-dom'
+import { Switch, Route } from 'react-router-dom'
 import Profile from './Profile'
 import Signin from './Signin'
 import { UserSession, Person } from 'blockstack'
@@ -21,11 +21,6 @@ configure({
   userSession
 });
 
-const _initializeCart = () => {
-  const json = localStorage.getItem('cart')
-  return json ? JSON.parse(json) : []
-}
-
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     addButton: {
@@ -43,7 +38,7 @@ export default function App() {
   const [person, setPerson] = useState<Person>()
   const [username, setUsername] = useState<string>('')
   const [isUserSigned, setIsUserSigned] = useState(false)
-  const [cart, _setCart] = useState<Array<Product>>(_initializeCart)
+  const [cart, _setCart] = useState<Array<Product>>([])
 
   useEffect(() => {
     const { userSession } = getConfig();
@@ -109,7 +104,7 @@ export default function App() {
                   }
                 />
                 <Route path='/transactions'>
-                  <Transaction />
+                  <Transaction product={cart[0]} />
                 </Route>
                 <Route path='/'>
                   <ListProducts
