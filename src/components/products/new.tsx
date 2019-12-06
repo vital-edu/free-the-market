@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react'
-import { UserSession } from 'blockstack'
+import React, { useState } from 'react'
 import ImageUploader from 'react-images-upload'
 import {
   Button,
