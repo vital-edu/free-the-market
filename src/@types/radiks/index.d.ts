@@ -1,4 +1,5 @@
 declare module 'radiks' {
+  import { UserData } from 'blockstack/lib/auth/authApp';
   import { UserSession } from 'blockstack'
 
   function configure(newConfig: Config): void
@@ -22,7 +23,7 @@ declare module 'radiks' {
     createdAt?: number,
     updatedAt?: number,
     signingKeyId?: string,
-    _id?: string
+    _id?: string,
     [key: string]: any,
   }
 
@@ -101,4 +102,64 @@ declare module 'radiks' {
     // @abstract
     afterFetch(): void;
   }
+
+  interface Member {
+    username: string,
+    inviteId: string
+  }
+
+  interface UserGroupAttrs extends Attrs {
+    name?: string | any,
+    gaiaConfig: Record<string, any> | any,
+    members: any[] | any,
+  }
+
+  const defaultMembers: Member[] = [];
+
+  class UserGroup extends Model {
+    privateKey?: string;
+    static schema: Schema = {
+      name: String,
+      gaiaConfig: Object,
+      members: {
+        type: Array,
+      },
+    }
+    static defaults: {
+      members: defaultMembers,
+    }
+    static async find(id: string): UserGroup
+    async create(): UserGroup
+    async makeGroupMembership(username: string): Promise<GroupInvitation>
+    static myGroups(): Promise<List<UserGroup>>
+    publicKey(): string
+    async encryptionPublicKey(): string
+    encryptionPrivateKey(): string
+    static modelName(): 'UserGroup'
+    getSigningKey() {
+      const { userGroups, signingKeys } = userGroupKeys();
+      const id = userGroups[this._id];
+      const privateKey = signingKeys[id];
+      return {
+        privateKey,
+        id,
+      };
+    }
+  }
+
+  function valueToString(value: any, clazz: any): any
+  function stringToValue(value: string, clazz: any): any
+  async function decryptObject(encrypted: any, model: Model): Model
+  async function encryptObject(model: Model): Model
+  function clearStorage(): void
+  function userGroupKeys(): {
+    [key: string]: string,
+    userGroups: {},
+    signingKeys: {},
+    personal: {},
+  }
+  function addPersonalSigningKey(signingKey: string): void
+  function addUserGroupKey(userGroup: UserGroup): void
+  function requireUserSession(): UserSession
+  function loadUserData(): null | UserData
 }
