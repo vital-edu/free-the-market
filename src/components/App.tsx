@@ -11,7 +11,8 @@ import { Add as AddIcon } from '@material-ui/icons'
 import { ThemeProvider, Fab, makeStyles, Theme, createStyles } from '@material-ui/core'
 import { Product } from '../models/Product'
 import { configure, getConfig, User } from 'radiks'
-import Transaction from './transactions/TransactionPage'
+import CreateTransaction from './transactions/TransactionPage'
+import ShowTransaction from './transactions/show'
 import { useHistory } from "react-router"
 
 const userSession = new UserSession({ appConfig })
@@ -103,9 +104,12 @@ export default function App() {
                       />
                   }
                 />
-                <Route path='/transactions'>
-                  <Transaction product={cart[0]} />
+                <Route path='/transactions/new'>
+                  <CreateTransaction product={cart[0]} />
                 </Route>
+                <Route path='/transactions/:id' render={
+                  routeProps => <ShowTransaction {...routeProps} />
+                } />
                 <Route path='/'>
                   <ListProducts
                     userSession={userSession}

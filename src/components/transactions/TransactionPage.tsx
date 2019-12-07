@@ -16,6 +16,7 @@ import PreviewProduct from '../products/_show'
 import UserCard from './_user'
 import { useHistory } from 'react-router'
 import EscrowList from './_escrow'
+import Transaction from './../../models/Transaction'
 import qrcode from 'qrcode'
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -54,6 +55,7 @@ export default function TransactionPage(props: TransactionPageProps) {
   const [product, setProduct] = useState<Product>(props.product)
   const [seller, setSeller] = useState<User | null>()
   const [escrows, setEscrows] = useState<Array<User>>([])
+  const [escrow, setEscrow] = useState<User | null>()
 
   useEffect(() => {
     if (props.product) {
@@ -110,8 +112,26 @@ export default function TransactionPage(props: TransactionPageProps) {
     })
     const walletAddress = paymentWallet.address as string
 
+    const redeemScript = paymentWallet.redeem!!.output!!.toString('hex')
+
     setQRCodeImage(await qrcode.toDataURL(`bitcoin:${walletAddress}`))
     setGeneratedAddress(walletAddress)
+
+    const transaction = new Transaction({
+      product_id: product._id,
+      buyer_id: User.currentUser()._id,
+      seller_id: seller!!._id,
+      escrowee_id: escrow!!._id,
+      redeem_script: redeemScript,
+      wallet_address: walletAddress,
+      bitcoin_price: product.attrs.price / 4
+    })
+
+    try {
+      await transaction.save()
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const readyToBuy = () => {
@@ -178,6 +198,7 @@ export default function TransactionPage(props: TransactionPageProps) {
             {escrows && <EscrowList
               escrows={escrows}
               onSelectedEscrow={(escrow: User) => {
+                setEscrow(escrow)
                 setEscrowPublicKey(escrow.attrs.publicKey)
               }}
             />}
