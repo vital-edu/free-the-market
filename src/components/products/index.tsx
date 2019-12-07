@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { UserSession } from 'blockstack';
-import { Product } from '../../models/Product'
+import { Product, ProductStatus } from '../../models/Product'
 import PreviewProduct from './_show';
 import {
   createStyles,
@@ -10,6 +10,7 @@ import {
   Container,
 } from '@material-ui/core';
 import { useHistory } from 'react-router';
+import { User } from 'radiks';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -47,7 +48,10 @@ export default function ListProducts(props: ListProductsProps) {
   const [products, setProducts] = useState<Array<Product>>([])
 
   useEffect(() => {
-    Product.fetchList().then((allProducts) => {
+    Product.fetchList({
+      user_id: `!=${User.currentUser()._id}`,
+      status: ProductStatus.available,
+    }).then((allProducts) => {
       setProducts(allProducts as Array<Product>)
     })
   }, [props.userSession])
