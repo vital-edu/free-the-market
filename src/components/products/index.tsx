@@ -48,7 +48,7 @@ export default function ListProducts(props: ListProductsProps) {
 
   useEffect(() => {
     Product.fetchList().then((allProducts) => {
-      setProducts(allProducts)
+      setProducts(allProducts as Array<Product>)
     })
   }, [props.userSession])
 
