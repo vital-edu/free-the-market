@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Transaction from '../../models/Transaction'
+import ProductInfo from './_productInfo'
+import UserCard from './_user'
 
 interface ShowTransactionProps {
   match: {
@@ -21,7 +23,18 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
   return (
     <div>
-      {transaction && transaction!!.seller!!.attrs._id}
+      {transaction &&
+        <div>
+          <ProductInfo
+            product={transaction.product!!}
+            seller={transaction.seller!!}
+          />
+          <UserCard
+            user={transaction.escrowee!!}
+            cardTitle="Informações do Escrowee"
+          />
+        </div>
+      }
     </div>
   )
 }
