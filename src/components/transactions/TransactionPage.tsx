@@ -38,8 +38,8 @@ export default function TransactionPage(props: TransactionPageProps) {
   const history = useHistory()
 
   const [userPublicKey, setUserPublicKey] = useState('')
-  const [sellerPublicKey] = useState(process.env.REACT_APP_KEY_2 as string)
-  const [escrowPublicKey] = useState(process.env.REACT_APP_KEY_3 as string)
+  const [sellerPublicKey, setSellerPublicKey] = useState<string>('')
+  const [escrowPublicKey, setEscrowPublicKey] = useState<string>('')
   const [generatedAddress, setGeneratedAddress] = useState('')
   const [payment, setPayment] = useState<bitcoin.Payment | null>(null)
   const [redeemScript, setRedeemScript] = useState<string>('')
@@ -56,15 +56,13 @@ export default function TransactionPage(props: TransactionPageProps) {
       return
     }
 
-    User.currentUser().encryptionPublicKey().then((key) => {
-      setUserPublicKey(key)
-    })
+    setUserPublicKey(User.currentUser().attrs.publicKey)
 
     User.fetchList().then((users) => {
       const availableEscrows = users.filter((u) => {
-        console.log(u)
         if (u._id === props.product.attrs.user_id) {
           setSeller(u as User)
+          setSellerPublicKey(u.attrs.publicKey)
           return false
         }
         return (u._id !== User.currentUser()._id)
@@ -88,7 +86,29 @@ export default function TransactionPage(props: TransactionPageProps) {
     ), { compressed: true, network, }),
   ].sort()
 
-  const onCreateTransaction = () => { // 193
+  const onBuy = () => {
+    const keys = [
+      Buffer.from(userPublicKey, 'hex'),
+      Buffer.from(sellerPublicKey, 'hex'),
+      Buffer.from(escrowPublicKey, 'hex'),
+    ].sort()
+    let paymentWallet = bitcoin.payments.p2ms({
+      m: 2,
+      pubkeys: keys,
+      network,
+    })
+    paymentWallet = bitcoin.payments.p2sh({
+      redeem: paymentWallet,
+      network,
+    })
+    setGeneratedAddress(paymentWallet.address!!)
+  }
+
+  const readyToBuy = () => {
+    return userPublicKey && sellerPublicKey && escrowPublicKey
+  }
+
+  const onCreateTransaction = () => {
     let newPayment;
     newPayment = bitcoin.payments.p2ms({
       m: 2,
@@ -100,9 +120,6 @@ export default function TransactionPage(props: TransactionPageProps) {
       network,
     });
 
-    console.log(newPayment)
-    console.log('payment.output: ' + newPayment.output.toString('hex'))
-    console.log('payment.hash: ' + newPayment.hash.toString('hex'))
     setRedeemScript(newPayment!!.redeem!!.output!!.toString('hex'))
     setPayment(newPayment)
     setGeneratedAddress(newPayment.address as string)
@@ -112,8 +129,8 @@ export default function TransactionPage(props: TransactionPageProps) {
     const inputs = await api.getInputs(generatedAddress, payment!!)
     if (!inputs) return
 
-    console.log(inputs)
-    console.log(payment!!.output!!)
+    // console.log(inputs)
+    // console.log(payment!!.output!!)
 
     let psbt = new bitcoin.Psbt({ network: testnet })
       .addInputs(inputs)
@@ -151,58 +168,43 @@ export default function TransactionPage(props: TransactionPageProps) {
             {escrows && <EscrowList
               escrows={escrows}
               onSelectedEscrow={(escrow: User) => {
-                console.log(`selected escrow ${escrow._id}`)
+                setEscrowPublicKey(escrow.attrs.publicKey)
               }}
             />}
-            <TextField
-              fullWidth={true}
-              label="Outlined"
-              variant="outlined"
-              value={userPublicKey}
-            />
-            <TextField
-              fullWidth={true}
-              label="Outlined"
-              variant="outlined"
-              value={sellerPublicKey}
-            />
-            <TextField
-              fullWidth={true}
-              label="Outlined"
-              variant="outlined"
-              value={escrowPublicKey}
-            />
-            <Button
-              fullWidth={true}
-              variant="contained"
-              color="primary"
-              onClick={onCreateTransaction}>
-              Criar transação transação
-        </Button>
+            {readyToBuy() &&
+              <Button
+                fullWidth={true}
+                variant="contained"
+                color="primary"
+                onClick={onBuy}>
+                Comprar
+              </Button>
+            }
             <Button
               fullWidth={true}
               variant="contained"
               color="primary"
               onClick={onTransfer}>
               Confirmar transação
-        </Button>
+            </Button>
             <Button
               fullWidth={true}
               variant="contained"
               color="primary"
               onClick={onPropagateTransaction}>
               Confirmar transação
-        </Button>
-            <TextField
-              fullWidth={true}
-              label="Address"
-              variant="outlined"
-              value={generatedAddress}
-              hidden={generatedAddress === ''}
-              InputProps={{
-                readOnly: true,
-              }}
-            />
+            </Button>
+            {generatedAddress &&
+              <TextField
+                fullWidth={true}
+                label="Address"
+                variant="outlined"
+                value={generatedAddress}
+                InputProps={{
+                  readOnly: true,
+                }}
+              />
+            }
             <TextField
               fullWidth={true}
               label="Redeem Script"
