@@ -53,7 +53,7 @@ export class Product extends Model {
     status: ProductStatus.available,
   }
 
-  afterFetch() {
+  async fromSchema() {
     this.attrs.photos = this.attrs.phothos.map((e: string) => JSON.parse(e))
   }
 }
