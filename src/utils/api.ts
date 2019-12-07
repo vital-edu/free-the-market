@@ -35,5 +35,4 @@ export async function propagateTransaction(tx: string) {
     method: 'POST',
     body: JSON.stringify({ tx })
   })
-  console.log({ res })
 }

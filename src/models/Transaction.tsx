@@ -100,7 +100,6 @@ export default class Transaction extends Model {
   }
 
   async afterFetch() {
-    console.log(this)
     this.product = await Product.findById(this.attrs.product_id) as Product
     this.seller = await User.findById(this.attrs.seller_id) as User
     this.buyer = await User.findById(this.attrs.buyer_id) as User

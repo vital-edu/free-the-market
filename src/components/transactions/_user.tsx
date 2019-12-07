@@ -48,7 +48,6 @@ export default function UserCard(props: UserCardProps) {
 
   useEffect(() => {
     lookupProfile(props.user!!.attrs.username).then((profile) => {
-      console.log({ person: new Person(profile) })
       setUser(new Person(profile))
     })
   }, [])

@@ -160,9 +160,6 @@ export default function TransactionPage(props: TransactionPageProps) {
     const inputs = await api.getInputs(generatedAddress, payment!!)
     if (!inputs) return
 
-    // console.log(inputs)
-    // console.log(payment!!.output!!)
-
     let psbt = new bitcoin.Psbt({ network: testnet })
       .addInputs(inputs)
       .addOutput({
