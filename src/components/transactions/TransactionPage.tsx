@@ -18,6 +18,7 @@ import { useHistory } from 'react-router'
 import EscrowList from './_escrow'
 import Transaction from './../../models/Transaction'
 import qrcode from 'qrcode'
+import ProductInfo from './_productInfo'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -181,19 +182,14 @@ export default function TransactionPage(props: TransactionPageProps) {
 
   return (
     <div>
-      {product ?
+      {product && seller ?
         <Grid
           container
-          direction="row"
+          direction="column"
           justify="center"
           alignItems="center"
         >
-          <PreviewProduct
-            product={product}
-          />
-          {seller &&
-            <UserCard user={seller} cardTitle="Informações do Vendedor" />
-          }
+          <ProductInfo product={product} seller={seller} />
           <form noValidate autoComplete="off" className={classes.root}>
             {escrows && <EscrowList
               escrows={escrows}
