@@ -1,4 +1,5 @@
-import { Model, Schema } from 'radiks';
+import { Model, Schema, User } from 'radiks';
+import { Product } from './Product';
 
 export enum BuyerStatus {
   notPaid = 'not paid yet',
@@ -84,6 +85,11 @@ export default class Transaction extends Model {
     },
   }
 
+  product?: Product
+  seller?: User
+  buyer?: User
+  escrowee?: User
+
   static defaults = {
     buyer_status: BuyerStatus.notPaid,
     seller_status: SellerStatus.waiting,
@@ -91,5 +97,13 @@ export default class Transaction extends Model {
     status: TransactionStatus.active,
     buyer_redeem_script: '',
     seller_redeem_script: '',
+  }
+
+  async afterFetch() {
+    console.log(this)
+    this.product = await Product.findById(this.attrs.product_id) as Product
+    this.seller = await User.findById(this.attrs.seller_id) as User
+    this.buyer = await User.findById(this.attrs.buyer_id) as User
+    this.escrowee = await User.findById(this.attrs.escrowee_id) as User
   }
 }
