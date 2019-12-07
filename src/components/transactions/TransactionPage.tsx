@@ -16,6 +16,7 @@ import PreviewProduct from '../products/_show'
 import UserCard from './_user'
 import { useHistory } from 'react-router'
 import EscrowList from './_escrow'
+import qrcode from 'qrcode'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -23,6 +24,11 @@ const useStyles = makeStyles((theme: Theme) =>
       '& > *': {
         margin: theme.spacing(1),
       },
+    },
+    addressRoot: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
     },
   }),
 );
@@ -36,6 +42,7 @@ interface TransactionPageProps {
 export default function TransactionPage(props: TransactionPageProps) {
   const classes = useStyles()
   const history = useHistory()
+  const [QRCodeImage, setQRCodeImage] = useState('')
 
   const [userPublicKey, setUserPublicKey] = useState('')
   const [sellerPublicKey, setSellerPublicKey] = useState<string>('')
@@ -86,7 +93,7 @@ export default function TransactionPage(props: TransactionPageProps) {
     ), { compressed: true, network, }),
   ].sort()
 
-  const onBuy = () => {
+  const onBuy = async () => {
     const keys = [
       Buffer.from(userPublicKey, 'hex'),
       Buffer.from(sellerPublicKey, 'hex'),
@@ -101,14 +108,17 @@ export default function TransactionPage(props: TransactionPageProps) {
       redeem: paymentWallet,
       network,
     })
-    setGeneratedAddress(paymentWallet.address!!)
+    const walletAddress = paymentWallet.address as string
+
+    setQRCodeImage(await qrcode.toDataURL(`bitcoin:${walletAddress}`))
+    setGeneratedAddress(walletAddress)
   }
 
   const readyToBuy = () => {
     return userPublicKey && sellerPublicKey && escrowPublicKey
   }
 
-  const onCreateTransaction = () => {
+  const onCreateTransaction = async () => {
     let newPayment;
     newPayment = bitcoin.payments.p2ms({
       m: 2,
@@ -195,15 +205,18 @@ export default function TransactionPage(props: TransactionPageProps) {
               Confirmar transação
             </Button>
             {generatedAddress &&
-              <TextField
-                fullWidth={true}
-                label="Address"
-                variant="outlined"
-                value={generatedAddress}
-                InputProps={{
-                  readOnly: true,
-                }}
-              />
+              <div className={classes.addressRoot}>
+                <img src={QRCodeImage} />
+                <TextField
+                  fullWidth={true}
+                  label="Endereço Bitcoin"
+                  variant="outlined"
+                  value={generatedAddress}
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+              </div>
             }
             <TextField
               fullWidth={true}
