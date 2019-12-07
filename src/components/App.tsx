@@ -25,7 +25,7 @@ configure({
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     addButton: {
-      position: 'absolute',
+      position: 'fixed',
       right: 15,
       bottom: 15,
     }

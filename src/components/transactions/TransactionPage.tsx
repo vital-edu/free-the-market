@@ -7,7 +7,7 @@ import {
   Theme,
   Button,
 } from '@material-ui/core'
-import { User, Model } from 'radiks'
+import { User, Model, UserGroup } from 'radiks'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
 import * as api from '../../utils/api'
@@ -59,14 +59,14 @@ export default function TransactionPage(props: TransactionPageProps) {
 
     setUserPublicKey(User.currentUser().attrs.publicKey)
 
-    User.fetchList().then((users) => {
+    User.fetchList({ _id: `!=${User.currentUser()._id}` }).then((users) => {
       const availableEscrows = users.filter((u) => {
         if (u._id === props.product.attrs.user_id) {
           setSeller(u as User)
           setSellerPublicKey(u.attrs.publicKey)
           return false
         }
-        return (u._id !== User.currentUser()._id)
+        return true
       }) as Array<User>
       setEscrows(availableEscrows)
     })
@@ -105,6 +105,7 @@ export default function TransactionPage(props: TransactionPageProps) {
     const walletAddress = paymentWallet.address as string
 
     const redeemScript = paymentWallet.redeem!!.output!!.toString('hex')
+    const bitcoinExchangeRate = 32 / 1e6
 
     const transaction = new Transaction({
       product_id: product._id,
@@ -113,12 +114,18 @@ export default function TransactionPage(props: TransactionPageProps) {
       escrowee_id: escrow!!._id,
       redeem_script: redeemScript,
       wallet_address: walletAddress,
-      bitcoin_price: product.attrs.price / 4
+      bitcoin_price: (product.attrs.price as number) * bitcoinExchangeRate
     })
 
     try {
       const { _id } = await transaction.save() as Model
-      history.push(`/transaction/${_id}`)
+
+      // create group
+      const group = new UserGroup({ name: _id })
+      group.create()
+      await group.makeGroupMembership(transaction.attrs.seller_id)
+      await group.makeGroupMembership(transaction.attrs.escrowee_id)
+      history.push(`/transactions/${_id}`)
     } catch (err) {
       console.error(err)
     }

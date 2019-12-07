@@ -81,6 +81,7 @@ export default function UserCard(props: UserCardProps) {
                   </Typography>
                   <Typography gutterBottom variant="subtitle1">
                     {user._profile.description && user._profile.description}
+                    <br />
                     <Button
                       variant="outlined"
                       color="primary"

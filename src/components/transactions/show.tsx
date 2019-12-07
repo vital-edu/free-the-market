@@ -1,9 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import Transaction from '../../models/Transaction'
+import Transaction, { BuyerStatus } from '../../models/Transaction'
 import ProductInfo from './_productInfo'
 import UserCard from './_user'
-import { TextField, makeStyles, createStyles, Theme } from '@material-ui/core'
+import * as api from '../../utils/api'
+import {
+  TextField,
+  makeStyles,
+  createStyles,
+  Theme,
+} from '@material-ui/core'
 import qrcode from 'qrcode'
+import TransactionStepper from './_stepper'
+import { Product } from '../../models/Product'
+import { User } from 'radiks'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -11,6 +20,9 @@ const useStyles = makeStyles((theme: Theme) =>
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
+    },
+    nested: {
+      paddingLeft: theme.spacing(4),
     },
   }),
 );
@@ -29,6 +41,8 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
   const [transaction, setTransaction] = useState<Transaction | null>()
   const [QRCodeImage, setQRCodeImage] = useState('')
+  const [remainingValue, setRemainingValue] = useState('')
+  const [isFetchingBitcoinBalance, setIsFetchingBitcoinBalance] = useState(true)
 
   useEffect(() => {
     Transaction.findById(id).then(async (transaction) => {
@@ -39,30 +53,63 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     })
   }, [])
 
+  useEffect(() => {
+    if (transaction && transaction.attrs.buyer_status === BuyerStatus.notPaid) {
+      let timer = setInterval(() => {
+        setIsFetchingBitcoinBalance(true)
+        api.getWalletBalance((transaction.attrs.wallet_address))
+          .then(async balance => {
+            const priceToBePaid = transaction.attrs.bitcoin_price as number
+            if (balance >= priceToBePaid) {
+              transaction.update({
+                buyer_status: BuyerStatus.paid,
+              })
+              await transaction.save()
+            } else {
+              setRemainingValue((priceToBePaid - balance).toFixed(8))
+            }
+            setIsFetchingBitcoinBalance(false)
+          })
+      }, 10000) // every 10 seconds
+
+      return () => clearTimeout(timer) // clear timeout when component unmount
+    }
+  }, [transaction])
+
   return (
     <div>
       {transaction &&
         <div>
           <ProductInfo
-            product={transaction.product!!}
-            seller={transaction.seller!!}
+            product={transaction.product as Product}
+            seller={transaction.seller as User}
           />
           <UserCard
-            user={transaction.escrowee!!}
+            user={transaction.escrowee as User}
             cardTitle="Informações do Escrowee"
           />
-          <div className={classes.addressRoot}>
-            <img src={QRCodeImage} />
-            <TextField
-              fullWidth={true}
-              label="Endereço Bitcoin"
-              variant="outlined"
-              value={transaction.attrs.wallet_address}
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-          </div>
+          <TransactionStepper
+            buyerStatus={transaction.attrs.buyer_status}
+            sellerStatus={transaction.attrs.seller_status}
+          />
+          {transaction.attrs.buyer_status === BuyerStatus.notPaid &&
+            <div className={classes.addressRoot}>
+              {isFetchingBitcoinBalance
+                ? 'Verificando saldo da carteira'
+                : `Deposite BTC ${remainingValue} na carteira abaixo`
+              }
+              <img src={QRCodeImage} />
+              <TextField
+                fullWidth={true}
+                label="Endereço Bitcoin"
+                variant="outlined"
+                value={transaction.attrs.wallet_address}
+                InputProps={{
+                  readOnly: true,
+                }}
+              />
+            </div>
+          }
         </div>
       }
     </div>
