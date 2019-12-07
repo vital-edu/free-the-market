@@ -7,17 +7,14 @@ import {
   Theme,
   Button,
 } from '@material-ui/core'
-import { User } from 'radiks'
+import { User, Model } from 'radiks'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
 import * as api from '../../utils/api'
 import { Product } from '../../models/Product'
-import PreviewProduct from '../products/_show'
-import UserCard from './_user'
 import { useHistory } from 'react-router'
 import EscrowList from './_escrow'
 import Transaction from './../../models/Transaction'
-import qrcode from 'qrcode'
 import ProductInfo from './_productInfo'
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -26,11 +23,6 @@ const useStyles = makeStyles((theme: Theme) =>
       '& > *': {
         margin: theme.spacing(1),
       },
-    },
-    addressRoot: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
     },
   }),
 );
@@ -44,7 +36,6 @@ interface TransactionPageProps {
 export default function TransactionPage(props: TransactionPageProps) {
   const classes = useStyles()
   const history = useHistory()
-  const [QRCodeImage, setQRCodeImage] = useState('')
 
   const [userPublicKey, setUserPublicKey] = useState('')
   const [sellerPublicKey, setSellerPublicKey] = useState<string>('')
@@ -115,9 +106,6 @@ export default function TransactionPage(props: TransactionPageProps) {
 
     const redeemScript = paymentWallet.redeem!!.output!!.toString('hex')
 
-    setQRCodeImage(await qrcode.toDataURL(`bitcoin:${walletAddress}`))
-    setGeneratedAddress(walletAddress)
-
     const transaction = new Transaction({
       product_id: product._id,
       buyer_id: User.currentUser()._id,
@@ -129,7 +117,8 @@ export default function TransactionPage(props: TransactionPageProps) {
     })
 
     try {
-      await transaction.save()
+      const { _id } = await transaction.save() as Model
+      history.push(`/transaction/${_id}`)
     } catch (err) {
       console.error(err)
     }
@@ -137,23 +126,6 @@ export default function TransactionPage(props: TransactionPageProps) {
 
   const readyToBuy = () => {
     return userPublicKey && sellerPublicKey && escrowPublicKey
-  }
-
-  const onCreateTransaction = async () => {
-    let newPayment;
-    newPayment = bitcoin.payments.p2ms({
-      m: 2,
-      pubkeys: keys.map(key => key.publicKey).sort(),
-      network,
-    });
-    newPayment = (bitcoin.payments as any)['p2sh']({
-      redeem: newPayment,
-      network,
-    });
-
-    setRedeemScript(newPayment!!.redeem!!.output!!.toString('hex'))
-    setPayment(newPayment)
-    setGeneratedAddress(newPayment.address as string)
   }
 
   const onTransfer = async () => {
@@ -218,20 +190,6 @@ export default function TransactionPage(props: TransactionPageProps) {
               onClick={onPropagateTransaction}>
               Confirmar transação
             </Button>
-            {generatedAddress &&
-              <div className={classes.addressRoot}>
-                <img src={QRCodeImage} />
-                <TextField
-                  fullWidth={true}
-                  label="Endereço Bitcoin"
-                  variant="outlined"
-                  value={generatedAddress}
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                />
-              </div>
-            }
             <TextField
               fullWidth={true}
               label="Redeem Script"
