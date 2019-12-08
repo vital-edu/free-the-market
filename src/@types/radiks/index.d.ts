@@ -74,7 +74,7 @@ declare module 'radiks' {
     static async findById<T extends Model>(
       _id: string,
       fetchOptions?: Record<string, any>,
-    ): Promise<Model | undefined>;
+    ): Promise<T | undefined>;
     static async count(_selector: FindQuery = {}): Promise<number>;
     static fetchOwnList(_selector: FindQuery = {}): Promise<Model[]>;
     constructor(attrs: Attrs = {}): Model;
@@ -144,6 +144,73 @@ declare module 'radiks' {
         privateKey,
         id,
       };
+    }
+  }
+
+  interface GroupInvitationAttrs extends Attrs {
+    userGroupId?: string | Record<string, any>,
+    signingKeyPrivateKey?: string | Record<string, any>,
+  }
+
+  class GroupInvitation extends Model {
+    static className = 'GroupInvitation';
+    userPublicKey: string;
+    static schema: Schema = {
+      userGroupId: String,
+      signingKeyPrivateKey: String,
+      signingKeyId: String,
+    }
+    static defaults = {
+      updatable: false,
+    }
+    static async makeInvitation(
+      username: string,
+      userGroup: UserGroup,
+    ): GroupInvitation
+    activate(): GroupMembership
+    async encryptionPublicKey(): string
+    encryptionPrivateKey(): string
+  }
+
+  interface UserGroupKeys {
+    userGroups: {
+      [userGroupId: string]: string,
+    },
+    signingKeys: {
+      [signingKeyId: string]: string
+    }
+  }
+
+  class GroupMembership extends Model {
+    static className = 'GroupMembership';
+    static schema = {
+      userGroupId: String,
+      username: {
+        type: String,
+        decrypted: true,
+      },
+      signingKeyPrivateKey: String,
+      signingKeyId: String,
+    }
+
+    static async fetchUserGroups(): Promise<UserGroupKeys>
+    static async cacheKeys(): void
+    static async clearStorage(): void
+    static userGroupKeys(): UserGroupKeys
+    async encryptionPublicKey(): string
+    encryptionPrivateKey(): string
+    getSigningKey(): {
+      signingKeyId?: string,
+      signingKeyPrivateKey?: string
+    } | {
+      _id: signingKeyId,
+      privateKey: signingKeyPrivateKey,
+    }
+    async fetchUserGroupSigningKey(): {
+      signingKeyId?: string
+    } | {
+      _id,
+      signingKeyId,
     }
   }
 
