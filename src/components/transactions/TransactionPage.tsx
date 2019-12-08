@@ -118,14 +118,23 @@ export default function TransactionPage(props: TransactionPageProps) {
     })
 
     try {
-      const { _id } = await transaction.save() as Model
-
       // create group
-      const group = new UserGroup({ name: _id })
-      group.create()
-      await group.makeGroupMembership(transaction.attrs.seller_id)
-      await group.makeGroupMembership(transaction.attrs.escrowee_id)
-      history.push(`/transactions/${_id}`)
+      let group = new UserGroup({ name: transaction._id })
+      group = await group.create()
+
+      const seller_invitation = await group.makeGroupMembership(
+        transaction.attrs.seller_id
+      )
+      const escrowee_invitation = await group.makeGroupMembership(
+        transaction.attrs.escrowee_id
+      )
+      transaction.update({
+        seller_invitation_id: seller_invitation._id,
+        escrowee_invitation_id: escrowee_invitation._id,
+      })
+
+      await transaction.save()
+      history.push(`/transactions/${transaction._id}`)
     } catch (err) {
       console.error(err)
     }
