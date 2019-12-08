@@ -42,6 +42,8 @@ export default function App() {
   const [cart, _setCart] = useState<Array<Product>>([])
 
   useEffect(() => {
+    if (isUserSigned) return
+
     const { userSession } = getConfig();
     if (userSession.isSignInPending()) {
       userSession.handlePendingSignIn().then(async () => {
@@ -58,7 +60,7 @@ export default function App() {
       setUsername('')
       setIsUserSigned(false)
     }
-  }, [isUserSigned])
+  }, [isUserSigned, person, username])
 
   const setCart = (products: Array<Product>) => {
     localStorage.setItem('cart', JSON.stringify(products))

@@ -56,6 +56,8 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const [whoIsViewing, setWhoIsViewing] = useState(WhoIsViewing.undetermined)
 
   useEffect(() => {
+    if (transaction) return
+
     Transaction.findById(id).then(async (transaction) => {
       const myId = User.currentUser()._id
 
@@ -74,7 +76,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         return history.push('/')
       }
     })
-  }, [history, id])
+  }, [history, id, transaction])
 
   useEffect(() => {
     switch (whoIsViewing) {
