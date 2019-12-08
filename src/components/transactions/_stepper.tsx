@@ -154,7 +154,7 @@ export default function TransactionStepper(props: TransactionStepperProps) {
     setSteps(s)
     setActives(a)
     setIsReady(true)
-  }, [])
+  }, [buyerStatus, sellerStatus])
 
   return (
     <div className={classes.root}>

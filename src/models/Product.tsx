@@ -1,4 +1,4 @@
-import { Model, User, Schema } from 'radiks';
+import { Model, Schema } from 'radiks';
 import { Category } from "./Category";
 import { UF } from "./UF";
 

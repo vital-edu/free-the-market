@@ -7,7 +7,7 @@ import {
   Theme,
   Button,
 } from '@material-ui/core'
-import { User, Model, UserGroup } from 'radiks'
+import { User, UserGroup } from 'radiks'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
 import * as api from '../../utils/api'
@@ -40,9 +40,9 @@ export default function TransactionPage(props: TransactionPageProps) {
   const [userPublicKey, setUserPublicKey] = useState('')
   const [sellerPublicKey, setSellerPublicKey] = useState<string>('')
   const [escrowPublicKey, setEscrowPublicKey] = useState<string>('')
-  const [generatedAddress, setGeneratedAddress] = useState('')
-  const [payment, setPayment] = useState<bitcoin.Payment | null>(null)
-  const [redeemScript, setRedeemScript] = useState<string>('')
+  const [generatedAddress] = useState('')
+  const [payment] = useState<bitcoin.Payment | null>(null)
+  const [redeemScript] = useState<string>('')
   const [transaction, setTransaction] = useState('')
   const [product, setProduct] = useState<Product>(props.product)
   const [seller, setSeller] = useState<User | null>()
@@ -70,7 +70,7 @@ export default function TransactionPage(props: TransactionPageProps) {
       }) as Array<User>
       setEscrows(availableEscrows)
     })
-  }, [product, userPublicKey])
+  }, [product, props.product, userPublicKey, history])
 
   const keys = [
     bitcoin.ECPair.fromPrivateKey(Buffer.from(

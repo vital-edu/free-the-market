@@ -41,7 +41,7 @@ export async function getWalletBalance(address: string) {
 }
 
 export async function propagateTransaction(tx: string) {
-  const res = await fetch('https://api.blockcypher.com/v1/btc/test3/txs/push', {
+  await fetch('https://api.blockcypher.com/v1/btc/test3/txs/push', {
     method: 'POST',
     body: JSON.stringify({ tx })
   })

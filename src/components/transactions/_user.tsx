@@ -50,7 +50,7 @@ export default function UserCard(props: UserCardProps) {
     lookupProfile(props.user!!.attrs.username).then((profile) => {
       setUser(new Person(profile))
     })
-  }, [])
+  }, [props.user])
 
   return (
     <div className={classes.root}>

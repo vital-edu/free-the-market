@@ -39,7 +39,7 @@ export default function Profile(props: {
           console.log('could not resolve profile')
         })
     }
-  }, [])
+  }, [isLocal, props.match.params.username, userSession])
 
   return (
     userSession.isUserSignedIn() && person ?
