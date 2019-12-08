@@ -47,6 +47,18 @@ export default class Transaction extends Model {
       type: String,
       decrypted: true,
     },
+    userGroupId: {
+      type: String,
+      decrypted: true,
+    },
+    seller_invitation_id: {
+      type: String,
+      decrypted: true,
+    },
+    escrowee_invitation_id: {
+      type: String,
+      decrypted: true,
+    },
     redeem_script: {
       type: String,
       decrypted: true,
