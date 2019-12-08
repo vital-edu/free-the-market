@@ -120,21 +120,24 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
     if (transaction && transaction.attrs.buyer_status === BuyerStatus.notPaid) {
       setIsFetchingBitcoinBalance(true)
-      api.getWalletBalance(
-        transaction.attrs.wallet_address
-      ).then(async (balance) => {
+      const timer = setInterval(async () => {
+        const balance = await api.getWalletBalance(
+          transaction.attrs.wallet_address
+        )
         const priceToBePaid = transaction.attrs.bitcoin_price as number
         if (balance >= priceToBePaid) {
           transaction.update({
             buyer_status: BuyerStatus.paid,
           })
           await transaction.save()
-          window.location.reload()
+          setTransaction(transaction)
         } else {
           setRemainingValue((priceToBePaid - balance).toFixed(8))
         }
         setIsFetchingBitcoinBalance(false)
       })
+
+      return () => clearInterval(timer)
     }
   }, [whoIsViewing, transaction])
 
