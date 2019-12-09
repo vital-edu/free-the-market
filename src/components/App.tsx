@@ -52,6 +52,7 @@ export default function App() {
         setIsUserSigned(true)
       });
     } else if (userSession.isUserSignedIn()) {
+      console.log(User.currentUser().encryptionPrivateKey())
       setPerson(new Person(userSession.loadUserData().profile))
       setUsername(userSession.loadUserData().username)
       setIsUserSigned(true)

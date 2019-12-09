@@ -7,7 +7,7 @@ import {
   Theme,
   Button,
 } from '@material-ui/core'
-import { User, UserGroup } from 'radiks'
+import { User } from 'radiks'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
 import * as api from '../../utils/api'
@@ -118,21 +118,6 @@ export default function TransactionPage(props: TransactionPageProps) {
     })
 
     try {
-      // create group
-      let group = new UserGroup({ name: transaction._id })
-      group = await group.create()
-
-      const seller_invitation = await group.makeGroupMembership(
-        transaction.attrs.seller_id
-      )
-      const escrowee_invitation = await group.makeGroupMembership(
-        transaction.attrs.escrowee_id
-      )
-      transaction.update({
-        seller_invitation_id: seller_invitation._id,
-        escrowee_invitation_id: escrowee_invitation._id,
-      })
-
       await transaction.save()
       history.push(`/transactions/${transaction._id}`)
     } catch (err) {
