@@ -47,10 +47,7 @@ export default class Transaction extends Model {
       type: String,
       decrypted: true,
     },
-    userGroupId: {
-      type: String,
-      decrypted: true,
-    },
+    userGroupId: String,
     seller_invitation_id: {
       type: String,
       decrypted: true,
