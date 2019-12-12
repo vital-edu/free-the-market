@@ -14,6 +14,7 @@ import { configure, getConfig, User } from 'radiks'
 import CreateTransaction from './transactions/TransactionPage'
 import ShowTransaction from './transactions/show'
 import { useHistory } from "react-router"
+import ListTransactions from './transactions'
 
 const userSession = new UserSession({ appConfig })
 
@@ -113,6 +114,9 @@ export default function App() {
                 <Route path='/transactions/:id' render={
                   routeProps => <ShowTransaction {...routeProps} />
                 } />
+                <Route path='/transactions/'>
+                  <ListTransactions />
+                </Route>
                 <Route path='/'>
                   <ListProducts
                     userSession={userSession}
