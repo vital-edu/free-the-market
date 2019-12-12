@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
-import { UserSession } from 'blockstack';
+import { UserSession } from 'blockstack'
 import { Product, ProductStatus } from '../../models/Product'
-import PreviewProduct from './_show';
+import PreviewProduct from './_show'
 import {
   createStyles,
   GridList,
   makeStyles,
   Theme,
   Container,
-} from '@material-ui/core';
-import { useHistory } from 'react-router';
-import { User } from 'radiks';
+} from '@material-ui/core'
+import { useHistory } from 'react-router'
+import { User } from 'radiks'
+import ProductInfoSkelethon from '../transactions/_productInfoSkelethon'
+import PreviewProductSkelethon from './_showSkelethon'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -23,12 +25,19 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     gridList: {
       width: 500,
-      height: 450,
+      minHeight: 450,
       alignSelf: 'center',
     },
     icon: {
       color: 'rgba(255, 255, 255, 0.54)',
     },
+    loading: {
+      flexDirection: 'column',
+      justifyContent: 'center',
+      height: '50vh',
+      display: 'flex',
+      alignItems: 'center',
+    }
   }),
 );
 
@@ -63,15 +72,21 @@ export default function ListProducts(props: ListProductsProps) {
 
   return (
     <Container className={classes.root}>
-      <GridList cellHeight={160} className={classes.gridList} cols={3}>
-        {products.map((product: Product, idx: number) => (
-          <PreviewProduct
-            key={idx}
-            product={product}
-            addProductToCart={handleAddProductToCart}
-          />
+      {products.length > 0 ?
+        <GridList cellHeight={160} className={classes.gridList} cols={3}>
+          {products.map((product: Product, idx: number) => (
+            <PreviewProduct
+              key={idx}
+              product={product}
+              addProductToCart={handleAddProductToCart}
+            />
+          ))}
+        </GridList>
+        : <GridList cellHeight={"auto"} className={classes.gridList} cols={3}>{Array(5).fill(0).map(() => (
+          <PreviewProductSkelethon />
         ))}
-      </GridList>
+        </GridList>
+      }
     </Container>
   )
 }

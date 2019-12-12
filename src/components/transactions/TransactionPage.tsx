@@ -16,6 +16,8 @@ import { useHistory } from 'react-router'
 import EscrowList from './_escrow'
 import Transaction from './../../models/Transaction'
 import ProductInfo from './_productInfo'
+import EscrowListSkelethon from './_escrowSkelethon'
+import ProductInfoSkelethon from './_productInfoSkelethon'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -152,68 +154,69 @@ export default function TransactionPage(props: TransactionPageProps) {
 
   return (
     <div>
-      {product && seller ?
-        <Grid
-          container
-          direction="column"
-          justify="center"
-          alignItems="center"
-        >
+      <Grid
+        container
+        direction="column"
+        justify="center"
+        alignItems="center"
+      >
+        {product && seller ?
           <ProductInfo product={product} seller={seller} />
-          <form noValidate autoComplete="off" className={classes.root}>
-            {escrows && <EscrowList
-              escrows={escrows}
-              onSelectedEscrow={(escrow: User) => {
-                setEscrow(escrow)
-                setEscrowPublicKey(escrow.attrs.publicKey)
-              }}
-            />}
-            {readyToBuy() &&
-              <Button
-                fullWidth={true}
-                variant="contained"
-                color="primary"
-                onClick={onBuy}>
-                Comprar
+          : <ProductInfoSkelethon />
+        }
+        <form noValidate autoComplete="off" className={classes.root}>
+          {escrows.length > 0 ? <EscrowList
+            escrows={escrows}
+            onSelectedEscrow={(escrow: User) => {
+              setEscrow(escrow)
+              setEscrowPublicKey(escrow.attrs.publicKey)
+            }}
+          /> : <EscrowListSkelethon />}
+          {readyToBuy() &&
+            <Button
+              fullWidth={true}
+              variant="contained"
+              color="primary"
+              onClick={onBuy}>
+              Comprar
               </Button>
-            }
-            <Button
-              fullWidth={true}
-              variant="contained"
-              color="primary"
-              onClick={onTransfer}>
-              Confirmar transação
+          }
+          <Button
+            fullWidth={true}
+            variant="contained"
+            color="primary"
+            onClick={onTransfer}>
+            Confirmar transação
             </Button>
-            <Button
-              fullWidth={true}
-              variant="contained"
-              color="primary"
-              onClick={onPropagateTransaction}>
-              Confirmar transação
+          <Button
+            fullWidth={true}
+            variant="contained"
+            color="primary"
+            onClick={onPropagateTransaction}>
+            Confirmar transação
             </Button>
-            <TextField
-              fullWidth={true}
-              label="Redeem Script"
-              variant="outlined"
-              value={redeemScript}
-              hidden={redeemScript === ''}
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-            <TextField
-              fullWidth={true}
-              label="Transaction"
-              variant="outlined"
-              value={transaction}
-              hidden={transaction === ''}
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-          </form>
-        </Grid >
-        : null}
+          <TextField
+            fullWidth={true}
+            label="Redeem Script"
+            variant="outlined"
+            value={redeemScript}
+            hidden={redeemScript === ''}
+            InputProps={{
+              readOnly: true,
+            }}
+          />
+          <TextField
+            fullWidth={true}
+            label="Transaction"
+            variant="outlined"
+            value={transaction}
+            hidden={transaction === ''}
+            InputProps={{
+              readOnly: true,
+            }}
+          />
+        </form>
+      </Grid >
     </div>
   )
 }

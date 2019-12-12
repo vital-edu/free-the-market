@@ -10,6 +10,7 @@ import {
 } from '@material-ui/core';
 import { User } from 'radiks';
 import { lookupProfile, Person } from 'blockstack';
+import UserCardSkelethon from './_userSkelethon';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -54,7 +55,7 @@ export default function UserCard(props: UserCardProps) {
 
   return (
     <div className={classes.root}>
-      {user &&
+      {user ?
         <Paper className={classes.paper}>
           <Grid container spacing={2}>
             <Grid item>
@@ -96,7 +97,7 @@ export default function UserCard(props: UserCardProps) {
             </Grid>
           </Grid>
         </Paper>
-      }
+      : <UserCardSkelethon /> }
     </div >
   )
 }
