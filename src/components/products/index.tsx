@@ -11,7 +11,6 @@ import {
 } from '@material-ui/core'
 import { useHistory } from 'react-router'
 import { User } from 'radiks'
-import ProductInfoSkelethon from '../transactions/_productInfoSkelethon'
 import PreviewProductSkelethon from './_showSkelethon'
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -82,9 +81,9 @@ export default function ListProducts(props: ListProductsProps) {
             />
           ))}
         </GridList>
-        : <GridList cellHeight={"auto"} className={classes.gridList} cols={3}>{Array(5).fill(0).map(() => (
-          <PreviewProductSkelethon />
-        ))}
+        : <GridList cellHeight={"auto"} className={classes.gridList} cols={3}>{
+          Array(5).fill(0).map((_, idx) => (<PreviewProductSkelethon key={idx} />))
+        }
         </GridList>
       }
     </Container>

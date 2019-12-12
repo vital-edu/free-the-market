@@ -45,6 +45,7 @@ export default function EscrowListSkelethon() {
           <ListItem
             role="listitem"
             button
+            key={0}
           >
             <ListItemAvatar>
               <Skeleton variant="rect" width="42px" height="42px"/>
