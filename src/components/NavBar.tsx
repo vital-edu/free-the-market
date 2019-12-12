@@ -1,8 +1,8 @@
 import React from 'react'
 import '../styles/NavBar.css'
 import {
-  ShoppingCartRounded,
   ExitToAppRounded,
+  Receipt,
 } from '@material-ui/icons'
 import {
   AppBar,
@@ -54,6 +54,12 @@ export default function NavBar(props: NavBarProps) {
     }
   }
 
+  const handleTransactionButton = () => {
+    if (history.location.pathname !== '/transactions') {
+      history.push('/transactions')
+    }
+  }
+
   return (
     <div className={classes.root}>
       <AppBar position="static">
@@ -69,7 +75,7 @@ export default function NavBar(props: NavBarProps) {
             <div>
               <IconButton color="default">
                 <Badge badgeContent={numberOfProductsOnCart}>
-                  <ShoppingCartRounded />
+                  <Receipt onClick={handleTransactionButton}/>
                 </Badge>
               </IconButton>
               <IconButton
