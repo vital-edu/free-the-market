@@ -19,7 +19,7 @@ import { UF } from '../../models/UF'
 import { Product } from '../../models/Product'
 import * as FileManager from '../../utils/FileManager'
 import { useHistory } from 'react-router'
-import { User } from 'radiks'
+import { User } from '@vital-edu/radiks'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

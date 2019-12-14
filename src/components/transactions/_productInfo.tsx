@@ -1,5 +1,5 @@
 import React from 'react'
-import { User } from 'radiks'
+import { User } from '@vital-edu/radiks'
 import { Product } from '../../models/Product'
 import PreviewProduct from '../products/_show'
 import UserCard from './_user'

@@ -8,7 +8,7 @@ import {
   Typography,
   Button,
 } from '@material-ui/core';
-import { User } from 'radiks';
+import { User } from '@vital-edu/radiks';
 import { lookupProfile, Person } from 'blockstack';
 import UserCardSkelethon from './_userSkelethon';
 

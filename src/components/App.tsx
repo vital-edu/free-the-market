@@ -10,7 +10,7 @@ import NavBar from './NavBar'
 import { Add as AddIcon } from '@material-ui/icons'
 import { ThemeProvider, Fab, makeStyles, Theme, createStyles } from '@material-ui/core'
 import { Product } from '../models/Product'
-import { configure, getConfig, User } from 'radiks'
+import { configure, getConfig, User } from '@vital-edu/radiks'
 import CreateTransaction from './transactions/TransactionPage'
 import ShowTransaction from './transactions/show'
 import { useHistory } from "react-router"

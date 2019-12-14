@@ -10,7 +10,7 @@ import {
   Container,
 } from '@material-ui/core'
 import { useHistory } from 'react-router'
-import { User } from 'radiks'
+import { User } from '@vital-edu/radiks'
 import PreviewProductSkelethon from './_showSkelethon'
 
 const useStyles = makeStyles((theme: Theme) =>

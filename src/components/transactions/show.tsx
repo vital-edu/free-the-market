@@ -14,7 +14,7 @@ import {
 import qrcode from 'qrcode'
 import TransactionStepper from './_stepper'
 import { Product } from '../../models/Product'
-import { User } from 'radiks'
+import { User, GroupInvitation } from '@vital-edu/radiks'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

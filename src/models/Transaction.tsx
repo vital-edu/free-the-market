@@ -1,4 +1,4 @@
-import { Model, Schema, User } from 'radiks';
+import { Model, Schema, User } from '@vital-edu/radiks';
 import { Product } from './Product';
 
 export enum BuyerStatus {
@@ -83,6 +83,15 @@ export default class Transaction extends Model {
       type: TransactionStatus,
       decrypted: true,
     },
+    seller_invitation: {
+      type: String,
+      decrypted: true,
+    },
+    escrowee_invitation: {
+      type: String,
+      decrypted: true,
+    },
+    userGroupId: String,
   }
 
   product?: Product

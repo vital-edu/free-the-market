@@ -11,7 +11,7 @@ import {
   Radio,
   ListItemText,
 } from '@material-ui/core'
-import { User } from 'radiks';
+import { User } from '@vital-edu/radiks';
 import UserCard from './_user';
 
 const useStyles = makeStyles((theme: Theme) =>

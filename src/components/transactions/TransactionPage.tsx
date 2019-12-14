@@ -7,7 +7,7 @@ import {
   Theme,
   Button,
 } from '@material-ui/core'
-import { User } from 'radiks'
+import { User } from '@vital-edu/radiks'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
 import * as api from '../../utils/api'

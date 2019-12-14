@@ -14,7 +14,7 @@ import {
 import {
   ExpandMore,
 } from '@material-ui/icons'
-import { User } from 'radiks'
+import { User } from '@vital-edu/radiks'
 import { useHistory } from "react-router"
 
 const useStyles = makeStyles((theme: Theme) =>

@@ -1,4 +1,4 @@
-import { Model, Schema } from 'radiks';
+import { Model, Schema } from '@vital-edu/radiks';
 import { Category } from "./Category";
 import { UF } from "./UF";
 
