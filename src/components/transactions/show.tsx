@@ -14,7 +14,7 @@ import {
 import qrcode from 'qrcode'
 import TransactionStepper from './_stepper'
 import { Product } from '../../models/Product'
-import { User, UserGroup, GroupInvitation, Model } from 'radiks'
+import { User } from 'radiks'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -85,34 +85,8 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       case WhoIsViewing.buyer:
         break
       case WhoIsViewing.seller:
-        UserGroup.myGroups().then(async (groups: Array<UserGroup>) => {
-          const group = groups.find((g) => {
-            return g._id === transaction!!._id
-          })
-          if (!group) {
-            console.log(transaction!!.attrs.seller_invitation_id as string)
-            const inv = await GroupInvitation.findById(
-              transaction!!.attrs.seller_invitation_id as string
-            ) as Model;
-            console.log(inv);
-            (inv as unknown as GroupInvitation).activate()
-          }
-        })
         break
       case WhoIsViewing.escrowee:
-        UserGroup.myGroups().then(async (groups: Array<UserGroup>) => {
-          const group = groups.find((g) => {
-            return g._id === transaction!!._id
-          })
-          if (!group) {
-            console.log(transaction!!.attrs.escrowee_invitation_id as string)
-            const inv = await GroupInvitation.findById(
-              transaction!!.attrs.escrowee_invitation_id as string
-            ) as Model;
-            console.log(inv);
-            (inv as unknown as GroupInvitation).activate()
-          }
-        })
         break
     }
   })
@@ -121,8 +95,8 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     if (whoIsViewing === WhoIsViewing.undetermined) return
 
     if (transaction && transaction.attrs.buyer_status === BuyerStatus.notPaid) {
-      setIsFetchingBitcoinBalance(true)
       const timer = setInterval(async () => {
+        setIsFetchingBitcoinBalance(true)
         const balance = await api.getWalletBalance(
           transaction.attrs.wallet_address
         )
@@ -137,7 +111,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
           setRemainingValue((priceToBePaid - balance).toFixed(8))
         }
         setIsFetchingBitcoinBalance(false)
-      })
+      }, 5000)
 
       return () => clearInterval(timer)
     }
