@@ -15,6 +15,7 @@ import qrcode from 'qrcode'
 import TransactionStepper from './_stepper'
 import { Product } from '../../models/Product'
 import { User, GroupInvitation, UserGroup } from '@vital-edu/radiks'
+import { encryptECIES } from 'blockstack/lib/encryption'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -144,6 +145,21 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     }
   }
 
+  const onUpdateBuyerStatus = async (newStatus: BuyerStatus) => {
+    switch (newStatus) {
+      case BuyerStatus.received:
+        const sellerPublicKey = await transaction!!.seller!!.encryptionPublicKey()
+        const redeem = encryptECIES(sellerPublicKey, transaction!!.attrs.redeem_script)
+        transaction!!.update({
+          buyer_status: newStatus,
+          seller_redeem_seller: redeem,
+        })
+        await transaction!!.save()
+        setTransaction(transaction)
+        break
+    }
+  }
+
   const shouldShowWalletAddress = () => (
     whoIsViewing === WhoIsViewing.buyer &&
     transaction!!.attrs.buyer_status === BuyerStatus.notPaid
@@ -152,6 +168,12 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const shouldShowDeliveredButton = () => (
     whoIsViewing === WhoIsViewing.seller &&
     transaction!!.attrs.seller_status === SellerStatus.waiting
+  )
+
+  const shouldShowConfirmReceiptButton = () => (
+    whoIsViewing === WhoIsViewing.buyer &&
+    transaction!!.attrs.seller_status === SellerStatus.delivered &&
+    transaction!!.attrs.buyer_status !== BuyerStatus.received
   )
 
   return (
@@ -196,6 +218,15 @@ export default function ShowTransaction(props: ShowTransactionProps) {
               onClick={() => onUpdateSellerStatus(SellerStatus.delivered)}>
               Confirmar envio do produto/serviço
              </Button>
+          }
+          {shouldShowConfirmReceiptButton() &&
+            <Button
+              fullWidth={true}
+              variant="contained"
+              color="primary"
+              onClick={() => onUpdateBuyerStatus(BuyerStatus.received)}>
+              Confirmar recebimento do produto/serviço
+           </Button>
           }
         </div>
       }
