@@ -91,7 +91,10 @@ export default class Transaction extends Model {
       type: String,
       decrypted: true,
     },
-    userGroupId: String,
+    userGroupId: {
+      type: String,
+      decrypted: true,
+    },
   }
 
   product?: Product

@@ -35,7 +35,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function App() {
   const classes = useStyles();
-  let history = useHistory()
+  const history = useHistory()
 
   const [person, setPerson] = useState<Person>()
   const [username, setUsername] = useState<string>('')

@@ -7,7 +7,7 @@ import {
   Theme,
   Button,
 } from '@material-ui/core'
-import { User } from '@vital-edu/radiks'
+import { User, UserGroup } from '@vital-edu/radiks'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
 import * as api from '../../utils/api'
@@ -107,7 +107,7 @@ export default function TransactionPage(props: TransactionPageProps) {
     const walletAddress = paymentWallet.address as string
 
     const redeemScript = paymentWallet.redeem!!.output!!.toString('hex')
-    const bitcoinExchangeRate = 32 / 1e6
+    const bitcoinExchangeRate = 3e4
 
     const transaction = new Transaction({
       product_id: product._id,
@@ -116,7 +116,21 @@ export default function TransactionPage(props: TransactionPageProps) {
       escrowee_id: escrow!!._id,
       redeem_script: redeemScript,
       wallet_address: walletAddress,
-      bitcoin_price: (product.attrs.price as number) * bitcoinExchangeRate
+      bitcoin_price: (product.attrs.price as number) / bitcoinExchangeRate
+    })
+
+    // create group
+    const group = new UserGroup({ name: transaction._id })
+    await group.create()
+
+    // create invitations
+    const seller_invitation = await group.makeGroupMembership(seller!!._id);
+    const escrowee_invitation = await group.makeGroupMembership(escrow!!._id);
+
+    transaction.update({
+      seller_invitation: seller_invitation._id,
+      escrowee_invitation: escrowee_invitation._id,
+      userGroupId: group._id,
     })
 
     try {

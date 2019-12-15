@@ -14,7 +14,7 @@ import {
 import qrcode from 'qrcode'
 import TransactionStepper from './_stepper'
 import { Product } from '../../models/Product'
-import { User, GroupInvitation } from '@vital-edu/radiks'
+import { User, GroupInvitation, UserGroup } from '@vital-edu/radiks'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -56,8 +56,6 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const [whoIsViewing, setWhoIsViewing] = useState(WhoIsViewing.undetermined)
 
   useEffect(() => {
-    if (transaction) return
-
     Transaction.findById(id).then(async (transaction) => {
       const myId = User.currentUser()._id
 
@@ -73,19 +71,30 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       } else if (transaction!!.attrs.escrowee === myId) {
         setWhoIsViewing(WhoIsViewing.escrowee)
       } else {
-        return history.push('/')
+        history.push('/')
       }
     })
-  }, [history, id, transaction])
+  }, [id, history])
 
   useEffect(() => {
     switch (whoIsViewing) {
       case WhoIsViewing.undetermined:
         return
       case WhoIsViewing.buyer:
-        break
+        return
       case WhoIsViewing.seller:
-        break
+        UserGroup.myGroups().then(async (groups) => {
+          try {
+            const invitation = await GroupInvitation.findById(
+              transaction!!.attrs.seller_invitation
+            ) as GroupInvitation
+
+            await invitation.activate()
+          } catch (error) {
+            console.error(error)
+          }
+        })
+        return
       case WhoIsViewing.escrowee:
         break
     }
@@ -96,6 +105,10 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
     if (transaction && transaction.attrs.buyer_status === BuyerStatus.notPaid) {
       const timer = setInterval(async () => {
+        if (transaction.attrs.buyer_status !== BuyerStatus.notPaid) {
+          clearInterval(timer)
+        }
+
         setIsFetchingBitcoinBalance(true)
         const balance = await api.getWalletBalance(
           transaction.attrs.wallet_address
