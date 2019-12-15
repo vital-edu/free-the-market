@@ -202,7 +202,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         const encryptedRedeem = encryptECIES(sellerPublicKey, encodedPSBT)
         transaction!!.update({
           buyer_status: newStatus,
-          seller_redeem_seller: encryptedRedeem,
+          seller_redeem_script: encryptedRedeem,
         })
         await transaction!!.save()
         setTransaction(transaction)
@@ -228,7 +228,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
   const shouldShowWithdrawForm = () => {
     if (whoIsViewing === WhoIsViewing.seller) {
-      return (transaction!!.attrs.seller_redeem_seller)
+      return (transaction!!.attrs.seller_redeem_script)
     } else if (whoIsViewing === WhoIsViewing.buyer) {
       return (transaction!!.attrs.buyer_redeem_script)
     }
@@ -246,7 +246,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       // decrypt redeem script
       const encodedPSBT = decryptECIES(
         User.currentUser().encryptionPrivateKey(),
-        transaction!!.attrs.seller_redeem_seller
+        transaction!!.attrs.seller_redeem_script
       )
 
       // sign inputs

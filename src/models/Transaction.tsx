@@ -63,7 +63,7 @@ export default class Transaction extends Model {
       type: String,
       decrypted: true,
     },
-    seller_redeem_seller: {
+    seller_redeem_script: {
       type: String,
       decrypted: true,
     },
