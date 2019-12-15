@@ -25,7 +25,8 @@
     "react-router-dom": "5.1.2",
     "react-scripts": "3.0.1",
     "serialize-javascript": "2.1.1",
-    "typescript": "^3.4.5"
+    "typescript": "^3.4.5",
+    "wallet-address-validator": "^0.2.4"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -33,14 +33,15 @@ export async function getInputs(
   }))
 }
 
-export async function getWalletBalance(address: string) {
+export async function getWalletBalance(address: string, resultOnSatoshis = false) {
   const data = await getWalletData(address)
 
+  if (resultOnSatoshis) return data.final_balance
   return data.final_balance / 1e8
 }
 
-export async function propagateTransaction(tx: string) {
-  await fetch('https://api.blockcypher.com/v1/btc/test3/txs/push', {
+export async function propagateTransaction(tx: string): Promise<Response> {
+  return await fetch('https://api.blockcypher.com/v1/btc/test3/txs/push', {
     method: 'POST',
     body: JSON.stringify({ tx })
   })
