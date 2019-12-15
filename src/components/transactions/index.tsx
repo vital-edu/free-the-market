@@ -10,6 +10,7 @@ import {
   ExpansionPanel,
   ExpansionPanelDetails,
   ExpansionPanelSummary,
+  Grid,
 } from '@material-ui/core'
 import {
   ExpandMore,
@@ -83,68 +84,41 @@ export default function ListTransactions() {
     history.push(`/transactions/${id}`)
   })
 
+  const transactionContainer = (
+    title: string,
+    transactions: Array<Transaction>
+  ) => (transactions.length > 0 &&
+    <ExpansionPanel>
+      <ExpansionPanelSummary
+        expandIcon={<ExpandMore />}
+        aria-controls="panel1a-content"
+        id="panel1a-header"
+      >
+        <Typography className={classes.heading}>{title}:</Typography>
+      </ExpansionPanelSummary>
+      <ExpansionPanelDetails>
+        <Grid container spacing={3}>
+          {transactions.map((t) => (
+            <Grid item xs={12}>
+              <Button
+                fullWidth={true}
+                variant="contained"
+                color="primary"
+                onClick={() => onTransactionClick(t._id)}>
+                {t._id}
+              </Button>
+            </Grid>
+          ))}
+        </Grid>
+      </ExpansionPanelDetails>
+    </ExpansionPanel>
+    )
+
   return (
     <Container className={classes.root}>
-      <ExpansionPanel>
-        <ExpansionPanelSummary
-          expandIcon={<ExpandMore />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
-        >
-          <Typography className={classes.heading}>Minhas compras:</Typography>
-        </ExpansionPanelSummary>
-        <ExpansionPanelDetails>
-          {myPurchases.map((purchase) => (
-            <Button
-              fullWidth={true}
-              variant="contained"
-              color="primary"
-              onClick={() => onTransactionClick(purchase._id)}>
-              {purchase._id}
-            </Button>
-          ))}
-        </ExpansionPanelDetails>
-      </ExpansionPanel>
-      <ExpansionPanel>
-        <ExpansionPanelSummary
-          expandIcon={<ExpandMore />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
-        >
-          <Typography className={classes.heading}>Minhas vendas</Typography>
-        </ExpansionPanelSummary>
-        <ExpansionPanelDetails>
-          {mySales.map((sales) => (
-            <Button
-              fullWidth={true}
-              variant="contained"
-              color="primary"
-              onClick={() => onTransactionClick(sales._id)}>
-              {sales._id}
-            </Button>
-          ))}
-        </ExpansionPanelDetails>
-      </ExpansionPanel>
-      <ExpansionPanel>
-        <ExpansionPanelSummary
-          expandIcon={<ExpandMore />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
-        >
-          <Typography className={classes.heading}>Transações em que sou mediador</Typography>
-        </ExpansionPanelSummary>
-        <ExpansionPanelDetails>
-          {myEscrows.map((escrow) => (
-            <Button
-            fullWidth={true}
-            variant="contained"
-            color="primary"
-            onClick={() => onTransactionClick(escrow._id)}>
-            {escrow._id}
-          </Button>
-          ))}
-        </ExpansionPanelDetails>
-      </ExpansionPanel>
+      {transactionContainer('Minhas compras', myPurchases)}
+      {transactionContainer('Minhas vendas', mySales)}
+      {transactionContainer('Transações em que sou mediador', myEscrows)}
     </Container>
   )
 }
