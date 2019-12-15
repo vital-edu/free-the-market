@@ -1,6 +1,5 @@
 import fetch from 'cross-fetch'
 import { PsbtInputExtended } from 'bitcoinjs-lib/src/types'
-import { Payment } from 'bitcoinjs-lib'
 
 export async function getWalletData(address: string) {
   const getAddressUrl = `https://api.blockcypher.com/v1/btc/test3/addrs/${address}?unspentOnly=true`
@@ -11,11 +10,11 @@ export async function getWalletData(address: string) {
 
 export async function getInputs(
   address: string,
-  payment: Payment,
-): Promise<Array<PsbtInputExtended> | null> {
+  redeemScript: string,
+): Promise<Array<PsbtInputExtended>> {
   const addressJson = await getWalletData(address)
 
-  if (!addressJson.txrefs) return null
+  if (!addressJson.txrefs) return []
   return Promise.all(addressJson.txrefs.map(async tx => {
     const getTxUrl = `https://api.blockcypher.com/v1/btc/test3/txs/${tx.tx_hash}?includeHex=true`
     const vout = tx.tx_output_n
@@ -27,7 +26,7 @@ export async function getInputs(
       index: vout,
       hash: txJson.hash,
       nonWitnessUtxo: Buffer.from(txJson.hex, 'hex'),
-      redeemScript: payment.redeem!!.output,
+      redeemScript: Buffer.from(redeemScript, 'hex'),
     }
 
     return input

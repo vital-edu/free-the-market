@@ -146,20 +146,20 @@ export default function TransactionPage(props: TransactionPageProps) {
   }
 
   const onTransfer = async () => {
-    const inputs = await api.getInputs(generatedAddress, payment!!)
-    if (!inputs) return
+    // const inputs = await api.getInputs(generatedAddress, payment!!.redeem!!.output)
+    // if (!inputs) return
 
-    let psbt = new bitcoin.Psbt({ network: testnet })
-      .addInputs(inputs)
-      .addOutput({
-        address: process.env.REACT_APP_BTC_ADDRESS as string,
-        value: 1e4,
-      })
-      .signAllInputs(keys[0])
-      .signAllInputs(keys[1])
-      .finalizeAllInputs()
+    // let psbt = new bitcoin.Psbt({ network: testnet })
+    //   .addInputs(inputs)
+    //   .addOutput({
+    //     address: process.env.REACT_APP_BTC_ADDRESS as string,
+    //     value: 1e4,
+    //   })
+    //   .signAllInputs(keys[0])
+    //   .signAllInputs(keys[1])
+    //   .finalizeAllInputs()
 
-    setTransaction(psbt.extractTransaction().toHex())
+    // setTransaction(psbt.extractTransaction().toHex())
   }
 
   const onPropagateTransaction = async () => {

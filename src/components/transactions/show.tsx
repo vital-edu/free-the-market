@@ -16,6 +16,8 @@ import TransactionStepper from './_stepper'
 import { Product } from '../../models/Product'
 import { User, GroupInvitation, UserGroup } from '@vital-edu/radiks'
 import { encryptECIES } from 'blockstack/lib/encryption'
+import * as bitcoin from 'bitcoinjs-lib'
+import { testnet } from 'bitcoinjs-lib/src/networks'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -148,11 +150,26 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const onUpdateBuyerStatus = async (newStatus: BuyerStatus) => {
     switch (newStatus) {
       case BuyerStatus.received:
+        const inputs = await api.getInputs(
+          transaction!!.attrs.wallet_address,
+          transaction!!.attrs.redeem_script,
+        )
+        if (inputs.length) {
+          console.error('the wallet does not have unspent output.')
+        }
+
+        let psbt = new bitcoin.Psbt({ network: testnet }).addInputs(inputs)
+        psbt.signAllInputs(bitcoin.ECPair.fromPrivateKey(Buffer.from(
+          User.currentUser().encryptionPrivateKey(), 'hex'
+        )))
+
+        // encrypt psbt before send to improve security
+        const encodedPSBT = psbt.toBase64()
         const sellerPublicKey = await transaction!!.seller!!.encryptionPublicKey()
-        const redeem = encryptECIES(sellerPublicKey, transaction!!.attrs.redeem_script)
+        const encryptedRedeem = encryptECIES(sellerPublicKey, encodedPSBT)
         transaction!!.update({
           buyer_status: newStatus,
-          seller_redeem_seller: redeem,
+          seller_redeem_seller: encryptedRedeem,
         })
         await transaction!!.save()
         setTransaction(transaction)
