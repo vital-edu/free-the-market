@@ -92,7 +92,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         history.push('/')
       }
     })
-  }, [id, history])
+  }, [transaction?.attrs.buyer_status, transaction?.attrs.seller_status])
 
   useEffect(() => {
     switch (whoIsViewing) {
@@ -122,31 +122,37 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     if (whoIsViewing === WhoIsViewing.undetermined) return
 
     if (transaction && transaction.attrs.buyer_status === BuyerStatus.notPaid) {
+      checkWalletBalance()
       const timer = setInterval(async () => {
         if (transaction.attrs.buyer_status !== BuyerStatus.notPaid) {
           clearInterval(timer)
+          return
         }
 
-        setIsFetchingBitcoinBalance(true)
-        const balance = await api.getWalletBalance(
-          transaction.attrs.wallet_address
-        )
-        const priceToBePaid = transaction.attrs.bitcoin_price as number
-        if (balance >= priceToBePaid) {
-          transaction.update({
-            buyer_status: BuyerStatus.paid,
-          })
-          await transaction.save()
-          setTransaction(transaction)
-        } else {
-          setRemainingValue((priceToBePaid - balance).toFixed(8))
-        }
-        setIsFetchingBitcoinBalance(false)
-      }, 5000)
+        await checkWalletBalance()
+      }, 10000)
 
       return () => clearInterval(timer)
     }
-  }, [whoIsViewing, transaction])
+  }, [whoIsViewing, transaction?.attrs.buyer_status])
+
+  const checkWalletBalance = async () => {
+    setIsFetchingBitcoinBalance(true)
+    const balance = await api.getWalletBalance(
+      transaction!!.attrs.wallet_address
+    )
+    const priceToBePaid = transaction!!.attrs.bitcoin_price as number
+    if (balance >= priceToBePaid) {
+      transaction!!.update({
+        buyer_status: BuyerStatus.paid,
+      })
+      await transaction!!.save()
+      setTransaction(transaction)
+    } else {
+      setRemainingValue((priceToBePaid - balance).toFixed(8))
+    }
+    setIsFetchingBitcoinBalance(false)
+  }
 
   const onUpdateSellerStatus = async (newStatus: SellerStatus) => {
     switch (newStatus) {
@@ -227,6 +233,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   )
 
   const shouldShowWithdrawForm = () => {
+    console.log(transaction)
     if (whoIsViewing === WhoIsViewing.seller) {
       return (transaction!!.attrs.seller_redeem_script)
     } else if (whoIsViewing === WhoIsViewing.buyer) {
