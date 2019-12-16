@@ -72,12 +72,17 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const [whoIsViewing, setWhoIsViewing] = useState(WhoIsViewing.undetermined)
   const [withdrawWallet, setWithdrawWallet] = useState('')
   const [addressIsValid, setAddressIsValid] = useState(true)
+  const [buyerStatus, setBuyerStatus] = useState(BuyerStatus.notPaid)
+  const [sellerStatus, setSellerStatus] = useState(SellerStatus.waiting)
 
+  // get transaction data
   useEffect(() => {
     Transaction.findById(id).then(async (transaction) => {
       const myId = User.currentUser()._id
 
       setTransaction(transaction as Transaction)
+      setBuyerStatus(transaction.attrs.buyer_status)
+      setSellerStatus(transaction.attrs.seller_status)
       setQRCodeImage(await qrcode.toDataURL(
         `bitcoin:${transaction!!.attrs.wallet_address}`
       ))
@@ -92,8 +97,9 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         history.push('/')
       }
     })
-  }, [transaction?.attrs.buyer_status, transaction?.attrs.seller_status])
+  }, [])
 
+  // prepare transaction based on who is viewing
   useEffect(() => {
     switch (whoIsViewing) {
       case WhoIsViewing.undetermined:
@@ -101,7 +107,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       case WhoIsViewing.buyer:
         return
       case WhoIsViewing.seller:
-        UserGroup.myGroups().then(async (groups) => {
+        UserGroup.myGroups().then(async () => {
           try {
             const invitation = await GroupInvitation.findById(
               transaction!!.attrs.seller_invitation
@@ -116,15 +122,16 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       case WhoIsViewing.escrowee:
         break
     }
-  })
+  }, [whoIsViewing])
 
+  // check wallet balance
   useEffect(() => {
     if (whoIsViewing === WhoIsViewing.undetermined) return
 
-    if (transaction && transaction.attrs.buyer_status === BuyerStatus.notPaid) {
+    if (transaction && buyerStatus === BuyerStatus.notPaid) {
       checkWalletBalance()
       const timer = setInterval(async () => {
-        if (transaction.attrs.buyer_status !== BuyerStatus.notPaid) {
+        if (buyerStatus !== BuyerStatus.notPaid) {
           clearInterval(timer)
           return
         }
@@ -134,7 +141,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
       return () => clearInterval(timer)
     }
-  }, [whoIsViewing, transaction?.attrs.buyer_status])
+  }, [whoIsViewing, buyerStatus])
 
   const checkWalletBalance = async () => {
     setIsFetchingBitcoinBalance(true)
@@ -147,7 +154,6 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         buyer_status: BuyerStatus.paid,
       })
       await transaction!!.save()
-      setTransaction(transaction)
     } else {
       setRemainingValue((priceToBePaid - balance).toFixed(8))
     }
@@ -157,15 +163,18 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const onUpdateSellerStatus = async (newStatus: SellerStatus) => {
     switch (newStatus) {
       case SellerStatus.delivered:
-        transaction!!.update({ seller_status: newStatus })
+        transaction!!.update({
+          seller_status: newStatus,
+          seller_wallet: withdrawWallet,
+        })
         await transaction!!.save()
-        setTransaction(transaction)
         break
       case SellerStatus.withdrawn:
         break
       case SellerStatus.requestedEscrowee:
         break
     }
+    setSellerStatus(newStatus)
   }
 
   const onUpdateBuyerStatus = async (newStatus: BuyerStatus) => {
@@ -190,11 +199,10 @@ export default function ShowTransaction(props: ShowTransactionProps) {
           console.error('the wallet does not have unspent output.')
         }
 
-        console.log(withdrawnValue)
         let psbt = new bitcoin.Psbt({ network: testnet })
           .addInputs(inputs)
           .addOutput({
-            address: '2N2PWL9wzYSeakW4vsHJuvc1sxRtrhhu69z', // change me
+            address: transaction!!.attrs.seller_wallet,
             value: withdrawnValue
           })
 
@@ -211,9 +219,9 @@ export default function ShowTransaction(props: ShowTransactionProps) {
           seller_redeem_script: encryptedRedeem,
         })
         await transaction!!.save()
-        setTransaction(transaction)
         break
     }
+    setBuyerStatus(newStatus)
   }
 
   const shouldShowWalletAddress = () => (
@@ -232,8 +240,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     transaction!!.attrs.buyer_status !== BuyerStatus.received
   )
 
-  const shouldShowWithdrawForm = () => {
-    console.log(transaction)
+  const shouldShowWithdrawButton = () => {
     if (whoIsViewing === WhoIsViewing.seller) {
       return (transaction!!.attrs.seller_redeem_script)
     } else if (whoIsViewing === WhoIsViewing.buyer) {
@@ -249,54 +256,45 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   }
 
   const onWithdrawMoney = async () => {
-    if (validateBTCWallet(withdrawWallet)) {
-      // decrypt redeem script
-      const encodedPSBT = decryptECIES(
-        User.currentUser().encryptionPrivateKey(),
-        transaction!!.attrs.seller_redeem_script
-      )
+    // decrypt redeem script
+    const encodedPSBT = decryptECIES(
+      User.currentUser().encryptionPrivateKey(),
+      transaction!!.attrs.seller_redeem_script
+    )
 
-      // sign inputs
-      const psbt = bitcoin.Psbt.fromBase64(encodedPSBT as string)
-      psbt.signAllInputs(bitcoin.ECPair.fromPrivateKey(
-        Buffer.from(User.currentUser().encryptionPrivateKey(), 'hex')
-      ))
+    // sign inputs
+    const psbt = bitcoin.Psbt.fromBase64(encodedPSBT as string)
+    psbt.signAllInputs(bitcoin.ECPair.fromPrivateKey(
+      Buffer.from(User.currentUser().encryptionPrivateKey(), 'hex')
+    ))
 
-      const transactionIsValid = psbt.validateSignaturesOfAllInputs()
-      if (!transactionIsValid) {
-        console.error('transaction is invalid')
-        return
-      }
-
-      // transfer money to withdraw wallet
-      psbt.finalizeAllInputs()
-      const tx = psbt.extractTransaction().toHex()
-
-      const response = await api.propagateTransaction(tx)
-      if (response.status !== 200) {
-        console.error('error on propagate transaction: ', response.body)
-        return
-      }
-
-      // update transaction status
-      transaction!!.update({
-        seller_status: SellerStatus.withdrawn,
-        status: TransactionStatus.inactive
-      })
-      await transaction!!.save()
-      console.log('done')
-    } else {
-      setAddressIsValid(false)
+    const transactionIsValid = psbt.validateSignaturesOfAllInputs()
+    if (!transactionIsValid) {
+      console.error('transaction is invalid')
+      return
     }
+
+    // transfer money to withdraw wallet
+    psbt.finalizeAllInputs()
+    const tx = psbt.extractTransaction().toHex()
+
+    const response = await api.propagateTransaction(tx)
+    if (response.status !== 200) {
+      console.error('error on propagate transaction: ', response.body)
+      return
+    }
+
+    // update transaction status
+    transaction!!.update({
+      seller_status: SellerStatus.withdrawn,
+      status: TransactionStatus.inactive
+    })
+    await transaction!!.save()
   }
 
   const onChangeWithdrawWallet = (e: React.ChangeEvent<{ value: string }>) => {
     const address = e.target.value
-    if (address.length >= bitcoinWalletAddressSize) {
-      validateBTCWallet(address)
-    } else {
-      setAddressIsValid(true)
-    }
+    validateBTCWallet(address)
     setWithdrawWallet(address)
   }
 
@@ -313,8 +311,8 @@ export default function ShowTransaction(props: ShowTransactionProps) {
             cardTitle="Informações do Escrowee"
           />
           <TransactionStepper
-            buyerStatus={transaction.attrs.buyer_status}
-            sellerStatus={transaction.attrs.seller_status}
+            buyerStatus={buyerStatus}
+            sellerStatus={sellerStatus}
           />
           {shouldShowWalletAddress() &&
             <div className={classes.addressRoot}>
@@ -335,28 +333,10 @@ export default function ShowTransaction(props: ShowTransactionProps) {
             </div>
           }
           {shouldShowDeliveredButton() &&
-            <Button
-              fullWidth={true}
-              variant="contained"
-              color="primary"
-              onClick={() => onUpdateSellerStatus(SellerStatus.delivered)}>
-              Confirmar envio do produto/serviço
-             </Button>
-          }
-          {shouldShowConfirmReceiptButton() &&
-            <Button
-              fullWidth={true}
-              variant="contained"
-              color="primary"
-              onClick={() => onUpdateBuyerStatus(BuyerStatus.received)}>
-              Confirmar recebimento do produto/serviço
-           </Button>
-          }
-          {shouldShowWithdrawForm() &&
             <form className={classes.withdrawForm} noValidate autoComplete="off">
               <Typography>
-                Receba seu dinheiro informando o endereço da carteira para qual deseja que depositemos o valor da transação:
-            </Typography>
+                Informe a carteira para qual deseja que depositemos o valor da transação:
+               </Typography>
               <TextField
                 error={!addressIsValid}
                 className={classes.withdrawWallet}
@@ -371,10 +351,29 @@ export default function ShowTransaction(props: ShowTransactionProps) {
                 fullWidth={true}
                 variant="contained"
                 color="primary"
-                onClick={() => onWithdrawMoney()}>
-                Sacar dinheiro para a sua carteira
-           </Button>
+                disabled={!withdrawWallet || !addressIsValid}
+                onClick={() => onUpdateSellerStatus(SellerStatus.delivered)}>
+                Confirmar envio do produto/serviço
+              </Button>
             </form>
+          }
+          {shouldShowConfirmReceiptButton() &&
+            <Button
+              fullWidth={true}
+              variant="contained"
+              color="primary"
+              onClick={() => onUpdateBuyerStatus(BuyerStatus.received)}>
+              Confirmar recebimento do produto/serviço
+            </Button>
+          }
+          {shouldShowWithdrawButton() &&
+            <Button
+              fullWidth={true}
+              variant="contained"
+              color="primary"
+              onClick={() => onWithdrawMoney()}>
+              Sacar dinheiro para a sua carteira
+            </Button>
           }
         </div>
       }

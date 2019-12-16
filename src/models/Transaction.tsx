@@ -95,6 +95,18 @@ export default class Transaction extends Model {
       type: String,
       decrypted: true,
     },
+    seller_wallet: {
+      type: String,
+      decrypted: true,
+    },
+    buyer_wallet: {
+      type: String,
+      decrypted: true,
+    },
+    escrowee_wallet: {
+      type: String,
+      decrypted: true,
+    }
   }
 
   product?: Product
