@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  TextField,
   Grid,
   makeStyles,
   createStyles,
@@ -9,8 +8,6 @@ import {
 } from '@material-ui/core'
 import { User, UserGroup } from '@vital-edu/radiks'
 import * as bitcoin from 'bitcoinjs-lib'
-import { testnet } from 'bitcoinjs-lib/src/networks'
-import * as api from '../../utils/api'
 import { Product } from '../../models/Product'
 import { useHistory } from 'react-router'
 import EscrowList from './_escrow'
@@ -42,10 +39,6 @@ export default function TransactionPage(props: TransactionPageProps) {
   const [userPublicKey, setUserPublicKey] = useState('')
   const [sellerPublicKey, setSellerPublicKey] = useState<string>('')
   const [escrowPublicKey, setEscrowPublicKey] = useState<string>('')
-  const [generatedAddress] = useState('')
-  const [payment] = useState<bitcoin.Payment | null>(null)
-  const [redeemScript] = useState<string>('')
-  const [transaction, setTransaction] = useState('')
   const [product, setProduct] = useState<Product>(props.product)
   const [seller, setSeller] = useState<User | null>()
   const [escrows, setEscrows] = useState<Array<User>>([])
@@ -72,22 +65,7 @@ export default function TransactionPage(props: TransactionPageProps) {
       }) as Array<User>
       setEscrows(availableEscrows)
     })
-  }, [product, props.product, userPublicKey, history])
-
-  const keys = [
-    bitcoin.ECPair.fromPrivateKey(Buffer.from(
-      process.env.REACT_APP_KEY_1 as string,
-      'hex'
-    ), { compressed: true, network, }),
-    bitcoin.ECPair.fromPrivateKey(Buffer.from(
-      process.env.REACT_APP_KEY_2 as string,
-      'hex',
-    ), { compressed: true, network, }),
-    bitcoin.ECPair.fromPrivateKey(Buffer.from(
-      process.env.REACT_APP_KEY_3 as string,
-      'hex',
-    ), { compressed: true, network, }),
-  ].sort()
+  }, [])
 
   const onBuy = async () => {
     const keys = [
@@ -145,27 +123,6 @@ export default function TransactionPage(props: TransactionPageProps) {
     return userPublicKey && sellerPublicKey && escrowPublicKey
   }
 
-  const onTransfer = async () => {
-    // const inputs = await api.getInputs(generatedAddress, payment!!.redeem!!.output)
-    // if (!inputs) return
-
-    // let psbt = new bitcoin.Psbt({ network: testnet })
-    //   .addInputs(inputs)
-    //   .addOutput({
-    //     address: process.env.REACT_APP_BTC_ADDRESS as string,
-    //     value: 1e4,
-    //   })
-    //   .signAllInputs(keys[0])
-    //   .signAllInputs(keys[1])
-    //   .finalizeAllInputs()
-
-    // setTransaction(psbt.extractTransaction().toHex())
-  }
-
-  const onPropagateTransaction = async () => {
-    await api.propagateTransaction(transaction)
-  }
-
   return (
     <div>
       <Grid
@@ -195,40 +152,6 @@ export default function TransactionPage(props: TransactionPageProps) {
               Comprar
               </Button>
           }
-          <Button
-            fullWidth={true}
-            variant="contained"
-            color="primary"
-            onClick={onTransfer}>
-            Confirmar transação
-            </Button>
-          <Button
-            fullWidth={true}
-            variant="contained"
-            color="primary"
-            onClick={onPropagateTransaction}>
-            Confirmar transação
-            </Button>
-          <TextField
-            fullWidth={true}
-            label="Redeem Script"
-            variant="outlined"
-            value={redeemScript}
-            hidden={redeemScript === ''}
-            InputProps={{
-              readOnly: true,
-            }}
-          />
-          <TextField
-            fullWidth={true}
-            label="Transaction"
-            variant="outlined"
-            value={transaction}
-            hidden={transaction === ''}
-            InputProps={{
-              readOnly: true,
-            }}
-          />
         </form>
       </Grid >
     </div>
