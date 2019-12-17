@@ -37,7 +37,7 @@ export async function getWalletBalance(address: string, resultOnSatoshis = false
   const data = await getWalletData(address)
 
   if (resultOnSatoshis) return data.final_balance
-  return data.final_balance / 1e8
+  return data.balance / 1e8
 }
 
 export async function propagateTransaction(tx: string): Promise<Response> {
