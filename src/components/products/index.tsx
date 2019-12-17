@@ -8,6 +8,7 @@ import {
   makeStyles,
   Theme,
   Container,
+  Typography,
 } from '@material-ui/core'
 import { useHistory } from 'react-router'
 import { User } from '@vital-edu/radiks'
@@ -51,8 +52,14 @@ interface ListProductsProps {
 export default function ListProducts(props: ListProductsProps) {
   const classes = useStyles()
   const history = useHistory()
+  const noProductStyle = {
+    top: '50vh',
+    transform: 'translateY(50%)',
+    position: 'absolute' as const,
+  }
 
   const { cart, setCart } = props.cartManager
+  const [isLoading, setIsLoading] = useState(true)
   const [products, setProducts] = useState<Array<Product>>([])
 
   useEffect(() => {
@@ -60,6 +67,7 @@ export default function ListProducts(props: ListProductsProps) {
       user_id: `!=${User.currentUser()._id}`,
       status: ProductStatus.available,
     }).then((allProducts) => {
+      setIsLoading(false)
       setProducts(allProducts as Array<Product>)
     })
   }, [props.userSession])
@@ -71,7 +79,14 @@ export default function ListProducts(props: ListProductsProps) {
 
   return (
     <Container className={classes.root}>
-      {products.length > 0 ?
+      {isLoading &&
+        <GridList cellHeight={"auto"} className={classes.gridList} cols={3}>
+          {Array(5).fill(0).map((_, idx) => (
+            <PreviewProductSkelethon key={idx} />
+          ))}
+        </GridList>
+      }
+      {!isLoading && products.length > 0 &&
         <GridList cellHeight={160} className={classes.gridList} cols={3}>
           {products.map((product: Product, idx: number) => (
             <PreviewProduct
@@ -81,11 +96,14 @@ export default function ListProducts(props: ListProductsProps) {
             />
           ))}
         </GridList>
-        : <GridList cellHeight={"auto"} className={classes.gridList} cols={3}>{
-          Array(5).fill(0).map((_, idx) => (<PreviewProductSkelethon key={idx} />))
-        }
-        </GridList>
       }
-    </Container>
+      {!isLoading && products.length === 0 &&
+        <div style={noProductStyle}>
+          <Typography gutterBottom variant="subtitle1">
+            Não há produtos cadastrados na plataforma
+          </Typography>
+        </div>
+      }
+    </Container >
   )
 }
