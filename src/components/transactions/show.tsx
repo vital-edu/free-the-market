@@ -20,6 +20,7 @@ import { User, GroupInvitation, UserGroup } from '@vital-edu/radiks'
 import { encryptECIES, decryptECIES } from 'blockstack/lib/encryption'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
+import * as transactionUtils from '../../utils/transactionUtils'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -112,7 +113,6 @@ export default function ShowTransaction(props: ShowTransactionProps) {
             const invitation = await GroupInvitation.findById(
               transaction!!.attrs.seller_invitation
             ) as GroupInvitation
-
             await invitation.activate()
           } catch (error) {
             console.error(error)
@@ -267,6 +267,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     psbt.signAllInputs(bitcoin.ECPair.fromPrivateKey(
       Buffer.from(User.currentUser().encryptionPrivateKey(), 'hex')
     ))
+    psbt.signAllInputs(transactionUtils.privateKeyFromId(transaction!!._id))
 
     const transactionIsValid = psbt.validateSignaturesOfAllInputs()
     if (!transactionIsValid) {

@@ -16,6 +16,7 @@ import ProductInfo from './_productInfo'
 import EscrowListSkelethon from './_escrowSkelethon'
 import ProductInfoSkelethon from './_productInfoSkelethon'
 import LoadingDialog from '../LoadingDialog'
+import * as transactionUtils from '../../utils/transactionUtils'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -93,18 +94,27 @@ export default function TransactionPage(props: TransactionPageProps) {
 
   const onBuy = async () => {
     setLoadingTitle('Processando Compra')
+    setLoadingMessage('Coletando chaves públicas')
     setIsLoading(true)
 
-    setLoadingMessage('Coletando chaves públicas')
+    let transaction = new Transaction({
+      product_id: product._id,
+      buyer_id: User.currentUser()._id,
+      seller_id: seller!!._id,
+      escrowee_id: escrow!!._id,
+      bitcoin_price: transactionUtils.convertBRL2BTC(product.attrs.price)
+    })
+
     const keys = [
       Buffer.from(userPublicKey, 'hex'),
       Buffer.from(sellerPublicKey, 'hex'),
       Buffer.from(escrowPublicKey, 'hex'),
+      transactionUtils.privateKeyFromId(transaction._id).publicKey
     ].sort()
 
     setLoadingMessage('Gerando carteira de pagamento da transação')
     let paymentWallet = bitcoin.payments.p2ms({
-      m: 2,
+      m: 3,
       pubkeys: keys,
       network,
     })
@@ -115,16 +125,10 @@ export default function TransactionPage(props: TransactionPageProps) {
     const walletAddress = paymentWallet.address as string
 
     const redeemScript = paymentWallet.redeem!!.output!!.toString('hex')
-    const bitcoinExchangeRate = 3e4
 
-    const transaction = new Transaction({
-      product_id: product._id,
-      buyer_id: User.currentUser()._id,
-      seller_id: seller!!._id,
-      escrowee_id: escrow!!._id,
+    transaction.update({
       redeem_script: redeemScript,
       wallet_address: walletAddress,
-      bitcoin_price: (product.attrs.price as number) / bitcoinExchangeRate
     })
 
     // create group
