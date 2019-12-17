@@ -15,6 +15,7 @@ import CreateTransaction from './transactions/new'
 import ShowTransaction from './transactions/show'
 import { useHistory } from "react-router"
 import ListTransactions from './transactions'
+import LoadingDialog from './LoadingDialog'
 
 const userSession = new UserSession({ appConfig })
 
@@ -36,32 +37,59 @@ const useStyles = makeStyles((theme: Theme) =>
 export default function App() {
   const classes = useStyles();
   const history = useHistory()
+  const { userSession } = getConfig();
 
-  const [person, setPerson] = useState<Person>()
+  const [person, setPerson] = useState<Person | null>(null)
   const [username, setUsername] = useState<string>('')
   const [isUserSigned, setIsUserSigned] = useState(false)
   const [cart, _setCart] = useState<Array<Product>>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingTitle, setLoadingTitle] = useState('')
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [loadingProgressShouldBe, setLoadingProgressShouldBe] = useState(0)
 
   useEffect(() => {
-    if (isUserSigned) return
-
-    const { userSession } = getConfig();
     if (userSession.isSignInPending()) {
+      console.log('pending')
       userSession.handlePendingSignIn().then(async () => {
         window.history.replaceState({}, document.title, "/")
+        setIsLoading(true)
+        setLoadingTitle('Registrando sessão do usuário')
         await User.createWithCurrentUser();
-        setIsUserSigned(true)
+        setLoadingProgressShouldBe(100)
       });
-    } else if (userSession.isUserSignedIn()) {
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isUserSigned && person) return
+
+    if (userSession.isUserSignedIn()) {
       setPerson(new Person(userSession.loadUserData().profile))
       setUsername(userSession.loadUserData().username)
       setIsUserSigned(true)
-    } else {
-      setPerson(undefined)
-      setUsername('')
-      setIsUserSigned(false)
     }
-  }, [isUserSigned, person, username])
+  })
+
+  useEffect(() => {
+    if (!isLoading) return
+    let loadingTimer
+
+    if (loadingProgress >= 100) {
+      setIsLoading(false)
+      setLoadingProgress(0)
+    } else if (loadingProgress < loadingProgressShouldBe) {
+      loadingTimer = setTimeout(() => {
+        setLoadingProgress(loadingProgress + 1)
+      }, 1)
+    } else {
+      loadingTimer = setTimeout(() => {
+        setLoadingProgress(loadingProgress + 1)
+      }, 250)
+    }
+
+    return () => clearInterval(loadingTimer)
+  }, [isLoading, loadingProgress, loadingProgressShouldBe])
 
   const setCart = (products: Array<Product>) => {
     localStorage.setItem('cart', JSON.stringify(products))
@@ -80,6 +108,10 @@ export default function App() {
 
   return (
     <div className="site-wrapper">
+      {isLoading && <LoadingDialog
+        title={loadingTitle}
+        loadingProgress={loadingProgress}
+      />}
       <div className="site-wrapper-inner">
         <ThemeProvider theme={theme}>
           <NavBar
