@@ -15,6 +15,7 @@ import Transaction from '../../models/Transaction'
 import ProductInfo from './_productInfo'
 import EscrowListSkelethon from './_escrowSkelethon'
 import ProductInfoSkelethon from './_productInfoSkelethon'
+import LoadingDialog from '../LoadingDialog'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -35,19 +36,22 @@ interface TransactionPageProps {
 export default function TransactionPage(props: TransactionPageProps) {
   const classes = useStyles()
   const history = useHistory()
+  const product = props.product
 
   const [userPublicKey, setUserPublicKey] = useState('')
   const [sellerPublicKey, setSellerPublicKey] = useState<string>('')
   const [escrowPublicKey, setEscrowPublicKey] = useState<string>('')
-  const [product, setProduct] = useState<Product>(props.product)
   const [seller, setSeller] = useState<User | null>()
   const [escrows, setEscrows] = useState<Array<User>>([])
   const [escrow, setEscrow] = useState<User | null>()
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState('')
+  const [loadingTitle, setLoadingTitle] = useState('')
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [loadingProgressShouldBe, setLoadingProgressShouldBe] = useState(0)
 
   useEffect(() => {
-    if (props.product) {
-      setProduct(product)
-    } else {
+    if (!product) {
       history.push('/')
       return
     }
@@ -56,7 +60,7 @@ export default function TransactionPage(props: TransactionPageProps) {
 
     User.fetchList({ _id: `!=${User.currentUser()._id}` }).then((users) => {
       const availableEscrows = users.filter((u) => {
-        if (u._id === props.product.attrs.user_id) {
+        if (u._id === product.attrs.user_id) {
           setSeller(u as User)
           setSellerPublicKey(u.attrs.publicKey)
           return false
@@ -65,14 +69,40 @@ export default function TransactionPage(props: TransactionPageProps) {
       }) as Array<User>
       setEscrows(availableEscrows)
     })
-  }, [])
+  }, [product, history])
+
+  useEffect(() => {
+    if (!isLoading) return
+    let loadingTimer
+
+    if (loadingProgress >= 100) {
+      setIsLoading(false)
+      setLoadingProgress(0)
+    } else if (loadingProgress < loadingProgressShouldBe) {
+      loadingTimer = setTimeout(() => {
+        setLoadingProgress(loadingProgress + 1)
+      }, 1)
+    } else {
+      loadingTimer = setTimeout(() => {
+        setLoadingProgress(loadingProgress + 1)
+      }, 500)
+    }
+
+    return () => clearInterval(loadingTimer)
+  }, [isLoading, loadingProgress, loadingProgressShouldBe])
 
   const onBuy = async () => {
+    setLoadingTitle('Processando Compra')
+    setIsLoading(true)
+
+    setLoadingMessage('Coletando chaves públicas')
     const keys = [
       Buffer.from(userPublicKey, 'hex'),
       Buffer.from(sellerPublicKey, 'hex'),
       Buffer.from(escrowPublicKey, 'hex'),
     ].sort()
+
+    setLoadingMessage('Gerando carteira de pagamento da transação')
     let paymentWallet = bitcoin.payments.p2ms({
       m: 2,
       pubkeys: keys,
@@ -100,11 +130,17 @@ export default function TransactionPage(props: TransactionPageProps) {
     // create group
     const group = new UserGroup({ name: transaction._id })
     await group.create()
+    setLoadingProgressShouldBe(20)
 
     // create invitations
+    setLoadingMessage('Compartilhando transação com vendedor')
     const seller_invitation = await group.makeGroupMembership(seller!!._id);
+    setLoadingProgressShouldBe(40)
+    setLoadingMessage('Compartilhando transação com mediador')
     const escrowee_invitation = await group.makeGroupMembership(escrow!!._id);
+    setLoadingProgressShouldBe(60)
 
+    setLoadingMessage('Registrando transação')
     transaction.update({
       seller_invitation: seller_invitation._id,
       escrowee_invitation: escrowee_invitation._id,
@@ -113,6 +149,8 @@ export default function TransactionPage(props: TransactionPageProps) {
 
     try {
       await transaction.save()
+      setLoadingProgressShouldBe(100)
+      while (isLoading) { }
       history.push(`/transactions/${transaction._id}`)
     } catch (err) {
       console.error(err)
@@ -125,6 +163,11 @@ export default function TransactionPage(props: TransactionPageProps) {
 
   return (
     <div>
+      {isLoading && <LoadingDialog
+        title={loadingTitle}
+        message={loadingMessage}
+        loadingProgress={loadingProgress}
+      />}
       <Grid
         container
         direction="column"
