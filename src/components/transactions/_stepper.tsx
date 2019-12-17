@@ -113,19 +113,21 @@ export default function TransactionStepper(props: TransactionStepperProps) {
   const classes = useStyles()
   const { buyerStatus, sellerStatus } = props
 
-  const [activeStep, setActiveStep] = useState(1) // do not change that
+  const [activeStep, setActiveStep] = useState(0)
   const [actives, setActives] = useState([false, false, false])
   const [steps, setSteps] = useState(['', '', ''])
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
     const s = ['', '', '']
-    const a = [false, false, false]
+    let a = [false, false, false]
 
     switch (sellerStatus) {
       case SellerStatus.delivered:
         s[1] = 'Enviado'
+        a[0] = true
         a[1] = true
+        setActiveStep(1)
         break
       case SellerStatus.waiting:
         s[1] = 'Aguardando envio'
@@ -136,19 +138,23 @@ export default function TransactionStepper(props: TransactionStepperProps) {
       case BuyerStatus.received:
         s[2] = 'Recebido'
         s[0] = 'Pago'
-        a[2] = true
         a[0] = true
+        a[1] = true
+        a[2] = true
         setActiveStep(2)
         break
       case BuyerStatus.paid:
         s[0] = 'Pago'
-        setActiveStep(0)
         a[0] = true
         break
       case BuyerStatus.notPaid:
         s[0] = 'Aguardando pagamento'
-        setActiveStep(0)
         break
+    }
+
+    if (buyerStatus === BuyerStatus.withdrawn || sellerStatus === SellerStatus.withdrawn) {
+      a = [true, true, true]
+      setActiveStep(2)
     }
 
     setSteps(s)
