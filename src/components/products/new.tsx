@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ImageUploader from 'react-images-upload'
 import {
   Button,
@@ -20,6 +20,7 @@ import { Product } from '../../models/Product'
 import * as FileManager from '../../utils/FileManager'
 import { useHistory } from 'react-router'
 import { User } from '@vital-edu/radiks'
+import LoadingDialog from '../LoadingDialog'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -41,6 +42,11 @@ export default function CreateProduct() {
   const [category, setCategory] = useState<Category>(Category.servicos)
   const [description, setDescription] = useState('')
   const [uf, setUF] = useState(UF.digital)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState('')
+  const [loadingTitle, setLoadingTitle] = useState('')
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [loadingProgressShouldBe, setLoadingProgressShouldBe] = useState(0)
 
   const onDrop = async (files: Array<File>) => {
     const newPhotos = await FileManager.convertFiles(files)
@@ -67,7 +73,29 @@ export default function CreateProduct() {
     setUF(e.target.value as UF)
   }
 
+  useEffect(() => {
+    if (!isLoading) return
+    let loadingTimer
+
+    if (loadingProgress >= 100) {
+      setIsLoading(false)
+      setLoadingProgress(0)
+    } else if (loadingProgress < loadingProgressShouldBe) {
+      loadingTimer = setTimeout(() => {
+        setLoadingProgress(loadingProgress + 1)
+      }, 1)
+    } else {
+      loadingTimer = setTimeout(() => {
+        setLoadingProgress(loadingProgress + 1)
+      }, 50)
+    }
+
+    return () => clearInterval(loadingTimer)
+  }, [isLoading, loadingProgress, loadingProgressShouldBe])
+
   const onSubmitProduct = async () => {
+    setIsLoading(true)
+    setLoadingTitle('Registrando produto')
     const newProduct = new Product({
       name,
       photos,
@@ -79,11 +107,10 @@ export default function CreateProduct() {
     })
     try {
       await newProduct.save()
+      setLoadingProgressShouldBe(100)
       history.push('/')
     } catch (error) {
-      console.log('An error occurred:')
       console.error(error)
-      console.log('======== END OF THE ERROR MESSAGE ==========')
     }
   }
 
@@ -94,6 +121,10 @@ export default function CreateProduct() {
       justify="center"
       alignItems="center"
     >
+      {isLoading && <LoadingDialog
+        title={loadingTitle}
+        loadingProgress={loadingProgress}
+      />}
       <form noValidate autoComplete="off" className={classes.root}>
         <legend>Cadastrar Produto/Serviço</legend>
         <TextField

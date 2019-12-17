@@ -154,7 +154,6 @@ export default function TransactionPage(props: TransactionPageProps) {
     try {
       await transaction.save()
       setLoadingProgressShouldBe(100)
-      while (isLoading) { }
       history.push(`/transactions/${transaction._id}`)
     } catch (err) {
       console.error(err)
