@@ -11,6 +11,11 @@ import {
   Theme,
   Button,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@material-ui/core'
 import * as walletValidator from 'wallet-address-validator'
 import qrcode from 'qrcode'
@@ -21,6 +26,7 @@ import { encryptECIES, decryptECIES } from 'blockstack/lib/encryption'
 import * as bitcoin from 'bitcoinjs-lib'
 import { testnet } from 'bitcoinjs-lib/src/networks'
 import * as transactionUtils from '../../utils/transactionUtils'
+import LoadingDialog from '../LoadingDialog'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -63,7 +69,6 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const classes = useStyles()
   const { id } = props.match.params
   const history = useHistory()
-  const bitcoinWalletAddressSize = 35
   const bitcoinFee = 3e3
 
   const [transaction, setTransaction] = useState<Transaction | null>()
@@ -75,6 +80,13 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const [addressIsValid, setAddressIsValid] = useState(true)
   const [buyerStatus, setBuyerStatus] = useState(BuyerStatus.notPaid)
   const [sellerStatus, setSellerStatus] = useState(SellerStatus.waiting)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState('')
+  const [loadingTitle, setLoadingTitle] = useState('')
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [loadingProgressShouldBe, setLoadingProgressShouldBe] = useState(0)
+  const [hasAlert, setHasAlert] = useState(false)
+  const [alertMessage, setAlertMessage] = useState('')
 
   // get transaction data
   useEffect(() => {
@@ -98,15 +110,38 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         history.push('/')
       }
     })
-  }, [])
+  }, [history, id])
+
+  useEffect(() => {
+    if (!isLoading) return
+    let loadingTimer
+
+    if (loadingProgress >= 100) {
+      setIsLoading(false)
+      setLoadingProgress(0)
+    } else if (loadingProgress < loadingProgressShouldBe) {
+      loadingTimer = setTimeout(() => {
+        setLoadingProgress(loadingProgress + 1)
+      }, 1)
+    } else {
+      loadingTimer = setTimeout(() => {
+        setLoadingProgress(loadingProgress + 1)
+      }, 500)
+    }
+
+    return () => clearInterval(loadingTimer)
+  }, [isLoading, loadingProgress, loadingProgressShouldBe])
 
   // prepare transaction based on who is viewing
   useEffect(() => {
+    setLoadingTitle('Obtendo dados da transação')
+    setIsLoading(true)
+
     switch (whoIsViewing) {
       case WhoIsViewing.undetermined:
-        return
+        break
       case WhoIsViewing.buyer:
-        return
+        break
       case WhoIsViewing.seller:
         UserGroup.myGroups().then(async () => {
           try {
@@ -122,6 +157,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       case WhoIsViewing.escrowee:
         break
     }
+    setLoadingProgressShouldBe(100)
   }, [whoIsViewing])
 
   // check wallet balance
@@ -161,6 +197,9 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   }
 
   const onUpdateSellerStatus = async (newStatus: SellerStatus) => {
+    setLoadingTitle('Atualizando informações da transação')
+    setIsLoading(true)
+
     switch (newStatus) {
       case SellerStatus.delivered:
         transaction!!.update({
@@ -174,31 +213,49 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       case SellerStatus.requestedEscrowee:
         break
     }
+
+    setLoadingProgressShouldBe(100)
     setSellerStatus(newStatus)
   }
 
   const onUpdateBuyerStatus = async (newStatus: BuyerStatus) => {
+    setLoadingTitle('Atualizando informações da transação')
+    setIsLoading(true)
+
     switch (newStatus) {
       case BuyerStatus.received:
         // verify balance of wallet
+        setLoadingMessage('Obtendo saldo da carteira')
         const balance = await api.getWalletBalance(
           transaction!!.attrs.wallet_address,
           true,
         )
+        setLoadingProgressShouldBe(30)
+
         const withdrawnValue = balance - bitcoinFee
         if (withdrawnValue <= 0) {
+          setLoadingProgressShouldBe(100)
+          setHasAlert(true)
+          setAlertMessage('Carteira sem saldo. A carteira pode estar com saldo não confirmado')
           console.error('insufficient balance')
           return
         }
 
+        setLoadingMessage('Coletando transações não gastas da carteira')
         const inputs = await api.getInputs(
           transaction!!.attrs.wallet_address,
           transaction!!.attrs.redeem_script,
         )
+        setLoadingProgressShouldBe(60)
         if (inputs.length === 0) {
+          setLoadingProgressShouldBe(100)
+          setHasAlert(true)
+          setAlertMessage('Carteira sem saldo. A carteira pode estar com saldo não confirmado')
           console.error('the wallet does not have unspent output.')
+          return
         }
 
+        setLoadingMessage('Assinando transação')
         let psbt = new bitcoin.Psbt({ network: testnet })
           .addInputs(inputs)
           .addOutput({
@@ -214,6 +271,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         const encodedPSBT = psbt.toBase64()
         const sellerPublicKey = transaction!!.seller!!.attrs.publicKey
         const encryptedRedeem = encryptECIES(sellerPublicKey, encodedPSBT)
+        setLoadingMessage('Salvando dados da transação')
         transaction!!.update({
           buyer_status: newStatus,
           seller_redeem_script: encryptedRedeem,
@@ -221,6 +279,8 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         await transaction!!.save()
         break
     }
+
+    setLoadingProgressShouldBe(100)
     setBuyerStatus(newStatus)
   }
 
@@ -241,6 +301,9 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   )
 
   const shouldShowWithdrawButton = () => {
+    if (transaction!!.attrs.seller_status === SellerStatus.withdrawn
+      || transaction!!.attrs.buyer_status === BuyerStatus.withdrawn) return false
+
     if (whoIsViewing === WhoIsViewing.seller) {
       return (transaction!!.attrs.seller_redeem_script)
     } else if (whoIsViewing === WhoIsViewing.buyer) {
@@ -256,7 +319,11 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   }
 
   const onWithdrawMoney = async () => {
+    setLoadingTitle('Sacando dinheiro')
+    setIsLoading(true)
+
     // decrypt redeem script
+    setLoadingMessage('Assinando transação')
     const encodedPSBT = decryptECIES(
       User.currentUser().encryptionPrivateKey(),
       transaction!!.attrs.seller_redeem_script
@@ -278,19 +345,24 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     // transfer money to withdraw wallet
     psbt.finalizeAllInputs()
     const tx = psbt.extractTransaction().toHex()
+    setLoadingProgressShouldBe(40)
 
+    setLoadingMessage('Enviando transação para a rede Bitcoin')
     const response = await api.propagateTransaction(tx)
-    if (response.status !== 200) {
+    if (response.status !== 201) {
       console.error('error on propagate transaction: ', response.body)
       return
     }
+    setLoadingProgressShouldBe(60)
 
     // update transaction status
+    setLoadingMessage('Atualizando dados da compra')
     transaction!!.update({
       seller_status: SellerStatus.withdrawn,
       status: TransactionStatus.inactive
     })
     await transaction!!.save()
+    setLoadingProgressShouldBe(100)
   }
 
   const onChangeWithdrawWallet = (e: React.ChangeEvent<{ value: string }>) => {
@@ -301,6 +373,29 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
   return (
     <div>
+      {isLoading && <LoadingDialog
+        title={loadingTitle}
+        message={loadingMessage}
+        loadingProgress={loadingProgress}
+      />}
+      <Dialog
+        open={hasAlert}
+        onClose={() => setHasAlert(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">Houve um erro</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {alertMessage}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHasAlert(false)} color="primary">
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
       {transaction &&
         <div>
           <ProductInfo
