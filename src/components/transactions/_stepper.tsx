@@ -18,6 +18,7 @@ import {
   LocalShippingRounded,
   MonetizationOnRounded,
   CheckCircleRounded,
+  ErrorRounded,
 } from '@material-ui/icons';
 
 const ColorlibConnector = withStyles({
@@ -63,18 +64,22 @@ const useColorlibStepIconStyles = makeStyles({
   },
   completed: {
     backgroundImage:
-      'linear-gradient( 136deg, rgb(242,113,33) 0%, rgb(233,64,87) 50%, rgb(138,35,135) 100%)',
+      'linear-gradient( 136deg, rgb(33, 242, 88) 0%, rgb(61, 127, 66) 50%, rgb(7, 16, 2) 100%)',
   },
 });
 
-function ColorlibStepIcon(props: StepIconProps) {
+function ColorlibStepIcon(
+  props: StepIconProps,
+  sellerRequestedScrowee = false,
+  buyerRequestedScrowee = false,
+) {
   const classes = useColorlibStepIconStyles();
   const { active, completed } = props;
 
   const icons: { [index: string]: React.ReactElement } = {
     1: <MonetizationOnRounded />,
-    2: <LocalShippingRounded />,
-    3: <CheckCircleRounded />,
+    2: buyerRequestedScrowee ? <ErrorRounded /> : <LocalShippingRounded />,
+    3: sellerRequestedScrowee ? <ErrorRounded /> : <CheckCircleRounded />,
   };
 
   return (
@@ -115,18 +120,25 @@ export default function TransactionStepper(props: TransactionStepperProps) {
 
   const [activeStep, setActiveStep] = useState(0)
   const [actives, setActives] = useState([false, false, false])
+  const [completed, setCompleted] = useState([false, false, false])
   const [steps, setSteps] = useState(['', '', ''])
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
     const s = ['', '', '']
     let a = [false, false, false]
+    let c = [false, false, false]
 
     switch (sellerStatus) {
+      case SellerStatus.requestedEscrowee:
+        s[2] = 'Vendedor reclamou da confirmação'
+        c[2] = false
+        a[2] = true
+        // falls through
       case SellerStatus.delivered:
         s[1] = 'Enviado'
-        a[0] = true
-        a[1] = true
+        c[0] = a[0] = true
+        c[1] = a[1] = true
         setActiveStep(1)
         break
       case SellerStatus.waiting:
@@ -138,14 +150,19 @@ export default function TransactionStepper(props: TransactionStepperProps) {
       case BuyerStatus.received:
         s[2] = 'Recebido'
         s[0] = 'Pago'
-        a[0] = true
-        a[1] = true
-        a[2] = true
+        c[0] = a[0] = true
+        c[1] = a[1] = true
+        c[2] = a[2] = true
         setActiveStep(2)
         break
+      case BuyerStatus.requestedEscrowee:
+        s[1] = 'Comprador reclamou da entrega'
+        c[1] = false
+        a[1] = true
+        // falls through
       case BuyerStatus.paid:
         s[0] = 'Pago'
-        a[0] = true
+        c[0] = a[0] = true
         break
       case BuyerStatus.notPaid:
         s[0] = 'Aguardando pagamento'
@@ -159,6 +176,7 @@ export default function TransactionStepper(props: TransactionStepperProps) {
 
     setSteps(s)
     setActives(a)
+    setCompleted(c)
     setIsReady(true)
   }, [buyerStatus, sellerStatus])
 
@@ -170,8 +188,12 @@ export default function TransactionStepper(props: TransactionStepperProps) {
             <Step key={idx}>
               <StepLabel
                 active={actives[idx]}
-                completed={actives[idx]}
-                StepIconComponent={ColorlibStepIcon}>{label}
+                completed={completed[idx]}
+                StepIconComponent={(props) => ColorlibStepIcon(
+                  props,
+                  sellerStatus === SellerStatus.requestedEscrowee,
+                  buyerStatus === BuyerStatus.requestedEscrowee
+                )}>{label}
               </StepLabel>
             </Step>
           ))}
