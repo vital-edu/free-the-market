@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Grid,
 } from '@material-ui/core'
 import * as walletValidator from 'wallet-address-validator'
 import qrcode from 'qrcode'
@@ -87,6 +88,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const [loadingProgressShouldBe, setLoadingProgressShouldBe] = useState(0)
   const [hasAlert, setHasAlert] = useState(false)
   const [alertMessage, setAlertMessage] = useState('')
+  const [showWithdrawWalletInput, setShowWithdrawWalletInput] = useState(false)
 
   // get transaction data
   useEffect(() => {
@@ -177,7 +179,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
       return () => clearInterval(timer)
     }
-  }, [whoIsViewing, buyerStatus])
+  }, [whoIsViewing, buyerStatus, remainingValue, transaction])
 
   const checkWalletBalance = async () => {
     setIsFetchingBitcoinBalance(true)
@@ -196,11 +198,20 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     setIsFetchingBitcoinBalance(false)
   }
 
+  const onSetWithdrawStatus = async () => {
+    if (whoIsViewing === WhoIsViewing.seller) {
+      onUpdateSellerStatus(SellerStatus.requestedEscrowee)
+    } else {
+      onUpdateBuyerStatus(BuyerStatus.requestedEscrowee)
+    }
+  }
+
   const onUpdateSellerStatus = async (newStatus: SellerStatus) => {
     setLoadingTitle('Atualizando informações da transação')
     setIsLoading(true)
 
     switch (newStatus) {
+      case SellerStatus.requestedEscrowee:
       case SellerStatus.delivered:
         transaction!!.update({
           seller_status: newStatus,
@@ -209,8 +220,6 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         await transaction!!.save()
         break
       case SellerStatus.withdrawn:
-        break
-      case SellerStatus.requestedEscrowee:
         break
     }
 
@@ -278,6 +287,12 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         })
         await transaction!!.save()
         break
+      case BuyerStatus.requestedEscrowee:
+        transaction!!.update({
+          buyer_status: newStatus,
+          buyer_wallet: withdrawWallet,
+        })
+        await transaction!!.save()
     }
 
     setLoadingProgressShouldBe(100)
@@ -308,6 +323,15 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       return (transaction!!.attrs.seller_redeem_script)
     } else if (whoIsViewing === WhoIsViewing.buyer) {
       return (transaction!!.attrs.buyer_redeem_script)
+    }
+    return false
+  }
+
+  const shouldShowRequestMediationButton = () => {
+    if (whoIsViewing === WhoIsViewing.seller) {
+      return transaction!!.attrs.seller_status === SellerStatus.delivered
+    } else if (whoIsViewing === WhoIsViewing.buyer) {
+      return transaction!!.attrs.buyer_status === BuyerStatus.paid
     }
     return false
   }
@@ -406,6 +430,45 @@ export default function ShowTransaction(props: ShowTransactionProps) {
             user={transaction.escrowee as User}
             cardTitle="Informações do Escrowee"
           />
+          {shouldShowRequestMediationButton() &&
+            <Grid
+              container
+              direction="column"
+              justify="center"
+              alignItems="center"
+            >
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => setShowWithdrawWalletInput(true)}>
+                Solicitar mediação
+              </Button>
+            </Grid>
+          }
+          {showWithdrawWalletInput &&
+            <form className={classes.withdrawForm} noValidate autoComplete="off">
+              <Typography>
+                Informe a carteira para qual deseja que depositemos o valor da transação<br />caso o mediador lhe dê ganho de causa:
+              </Typography>
+              <TextField
+                error={!addressIsValid}
+                className={classes.withdrawWallet}
+                label="Endereço da sua carteira"
+                value={withdrawWallet}
+                onChange={onChangeWithdrawWallet}
+                helperText={!addressIsValid &&
+                  "O endereço fornecido não corresponde ao de uma carteira Bitcoin"
+                }
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={!withdrawWallet || !addressIsValid}
+                onClick={() => onSetWithdrawStatus()}>
+                Confirmar pedido de mediação
+              </Button>
+            </form>
+          }
           <TransactionStepper
             buyerStatus={buyerStatus}
             sellerStatus={sellerStatus}
@@ -417,15 +480,32 @@ export default function ShowTransaction(props: ShowTransactionProps) {
                 : `Deposite BTC ${remainingValue} na carteira abaixo`
               }
               <img src={QRCodeImage} alt="wallet qr code" />
-              <TextField
-                fullWidth={true}
-                label="Endereço Bitcoin"
-                variant="outlined"
-                value={transaction.attrs.wallet_address}
-                InputProps={{
-                  readOnly: true,
-                }}
-              />
+              <Grid
+                container
+                direction="row"
+                justify="center"
+                alignItems="center"
+              >
+                <TextField
+                  size="small"
+                  style={{ width: 400 }}
+                  label="Endereço Bitcoin"
+                  variant="outlined"
+                  value={transaction.attrs.wallet_address}
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  href={`https://live.blockcypher.com/btc-testnet/address/${transaction.attrs.wallet_address}`}
+                  target="_blank"
+                >
+                  Visualizar Carteira na BlockCypher
+                </Button>
+              </Grid>
+
             </div>
           }
           {shouldShowDeliveredButton() &&
@@ -473,6 +553,6 @@ export default function ShowTransaction(props: ShowTransactionProps) {
           }
         </div>
       }
-    </div>
+    </div >
   )
 }
