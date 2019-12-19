@@ -35,9 +35,9 @@ export async function getInputs(
 
 export async function getWalletBalance(address: string, resultOnSatoshis = false) {
   const data = await getWalletData(address)
+  const balance = data.final_balance
 
-  if (resultOnSatoshis) return data.final_balance
-  return data.balance / 1e8
+  return resultOnSatoshis ? balance : balance / 1e8
 }
 
 export async function propagateTransaction(tx: string): Promise<Response> {
