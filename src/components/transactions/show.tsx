@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useHistory } from 'react-router'
-import Transaction, { BuyerStatus, SellerStatus, TransactionStatus } from '../../models/Transaction'
+import Transaction, { BuyerStatus, SellerStatus, TransactionStatus, EscroweeStatus } from '../../models/Transaction'
 import ProductInfo from './_productInfo'
 import UserCard from './_user'
 import * as api from '../../utils/api'
@@ -58,6 +58,11 @@ enum WhoIsViewing {
   escrowee,
 }
 
+enum Favored {
+  seller = 'seller',
+  buyer = 'buyer',
+}
+
 interface ShowTransactionProps {
   match: {
     params: {
@@ -106,7 +111,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         setWhoIsViewing(WhoIsViewing.buyer)
       } else if (transaction!!.attrs.seller_id === myId) {
         setWhoIsViewing(WhoIsViewing.seller)
-      } else if (transaction!!.attrs.escrowee === myId) {
+      } else if (transaction!!.attrs.escrowee_id === myId) {
         setWhoIsViewing(WhoIsViewing.escrowee)
       } else {
         history.push('/')
@@ -157,6 +162,16 @@ export default function ShowTransaction(props: ShowTransactionProps) {
         })
         return
       case WhoIsViewing.escrowee:
+        UserGroup.myGroups().then(async () => {
+          try {
+            const invitation = await GroupInvitation.findById(
+              transaction!!.attrs.escrowee_invitation
+            ) as GroupInvitation
+            await invitation.activate()
+          } catch (error) {
+            console.error(error)
+          }
+        })
         break
     }
     setLoadingProgressShouldBe(100)
@@ -227,63 +242,90 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     setSellerStatus(newStatus)
   }
 
+  const createSignedRedeemScript = async (favored: Favored) => {
+    setLoadingTitle('Atualizando informações da transação')
+    setIsLoading(true)
+    // verify balance of wallet
+    setLoadingMessage('Obtendo saldo da carteira')
+    const balance = await api.getWalletBalance(
+      transaction!!.attrs.wallet_address,
+      true,
+    )
+    setLoadingProgressShouldBe(30)
+
+    const withdrawnValue = balance - bitcoinFee
+    if (withdrawnValue <= 0) {
+      setLoadingProgressShouldBe(100)
+      setHasAlert(true)
+      setAlertMessage('Carteira sem saldo. A carteira pode estar com saldo não confirmado')
+      console.error('insufficient balance')
+      return
+    }
+
+    setLoadingMessage('Coletando transações não gastas da carteira')
+    const inputs = await api.getInputs(
+      transaction!!.attrs.wallet_address,
+      transaction!!.attrs.redeem_script,
+    )
+    setLoadingProgressShouldBe(60)
+    if (inputs.length === 0) {
+      setLoadingProgressShouldBe(100)
+      setHasAlert(true)
+      setAlertMessage('Carteira sem saldo. A carteira pode estar com saldo não confirmado')
+      console.error('the wallet does not have unspent output.')
+      return
+    }
+
+    setLoadingMessage('Assinando transação')
+    let psbt = new bitcoin.Psbt({ network: testnet })
+      .addInputs(inputs)
+      .addOutput({
+        address: transaction!!.attrs[`${favored}_wallet`],
+        value: withdrawnValue
+      })
+
+    psbt.signAllInputs(bitcoin.ECPair.fromPrivateKey(Buffer.from(
+      User.currentUser().encryptionPrivateKey(), 'hex'
+    )))
+
+    // encrypt psbt before send to improve security
+    const encodedPSBT = psbt.toBase64()
+    const favoredPublicKey = transaction!![favored]!!.attrs.publicKey
+    return encryptECIES(favoredPublicKey, encodedPSBT)
+  }
+
+  const onTakeSideOnMediation = async (favored: Favored) => {
+    setLoadingTitle('Atualizando informações da transação')
+    setIsLoading(true)
+    const encryptedRedeem = createSignedRedeemScript(favored)
+    setLoadingMessage('Salvando dados da transação')
+
+    if (favored === Favored.buyer) {
+      transaction!!.update({
+        escrowee_status: EscroweeStatus.tookBuyerSide,
+        buyer_redeem_script: encryptedRedeem,
+      })
+    } else {
+      transaction!!.update({
+        escrowee_status: EscroweeStatus.tookSellerSide,
+        seller_redeem_script: encryptedRedeem,
+      })
+    }
+    await transaction!!.save()
+    setLoadingProgressShouldBe(100)
+  }
+
   const onUpdateBuyerStatus = async (newStatus: BuyerStatus) => {
     setLoadingTitle('Atualizando informações da transação')
     setIsLoading(true)
 
     switch (newStatus) {
       case BuyerStatus.received:
-        // verify balance of wallet
-        setLoadingMessage('Obtendo saldo da carteira')
-        const balance = await api.getWalletBalance(
-          transaction!!.attrs.wallet_address,
-          true,
-        )
-        setLoadingProgressShouldBe(30)
-
-        const withdrawnValue = balance - bitcoinFee
-        if (withdrawnValue <= 0) {
-          setLoadingProgressShouldBe(100)
-          setHasAlert(true)
-          setAlertMessage('Carteira sem saldo. A carteira pode estar com saldo não confirmado')
-          console.error('insufficient balance')
-          return
-        }
-
-        setLoadingMessage('Coletando transações não gastas da carteira')
-        const inputs = await api.getInputs(
-          transaction!!.attrs.wallet_address,
-          transaction!!.attrs.redeem_script,
-        )
-        setLoadingProgressShouldBe(60)
-        if (inputs.length === 0) {
-          setLoadingProgressShouldBe(100)
-          setHasAlert(true)
-          setAlertMessage('Carteira sem saldo. A carteira pode estar com saldo não confirmado')
-          console.error('the wallet does not have unspent output.')
-          return
-        }
-
-        setLoadingMessage('Assinando transação')
-        let psbt = new bitcoin.Psbt({ network: testnet })
-          .addInputs(inputs)
-          .addOutput({
-            address: transaction!!.attrs.seller_wallet,
-            value: withdrawnValue
-          })
-
-        psbt.signAllInputs(bitcoin.ECPair.fromPrivateKey(Buffer.from(
-          User.currentUser().encryptionPrivateKey(), 'hex'
-        )))
-
-        // encrypt psbt before send to improve security
-        const encodedPSBT = psbt.toBase64()
-        const sellerPublicKey = transaction!!.seller!!.attrs.publicKey
-        const encryptedRedeem = encryptECIES(sellerPublicKey, encodedPSBT)
+        const encryptedRedeem = createSignedRedeemScript(Favored.buyer)
         setLoadingMessage('Salvando dados da transação')
         transaction!!.update({
           buyer_status: newStatus,
-          seller_redeem_script: encryptedRedeem,
+          buyer_redeem_script: encryptedRedeem,
         })
         await transaction!!.save()
         break
@@ -394,6 +436,16 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     validateBTCWallet(address)
     setWithdrawWallet(address)
   }
+
+  const shouldShowMediatorAcceptSellerRequestButton = (): boolean => (
+    whoIsViewing === WhoIsViewing.escrowee
+    && transaction!!.attrs.seller_status === SellerStatus.requestedEscrowee
+  )
+
+  const shouldShowMediatorAcceptBuyerRequestButton = (): boolean => (
+    whoIsViewing === WhoIsViewing.escrowee
+    && transaction!!.attrs.buyer_status === BuyerStatus.requestedEscrowee
+  )
 
   return (
     <div>
@@ -549,6 +601,24 @@ export default function ShowTransaction(props: ShowTransactionProps) {
               color="primary"
               onClick={() => onWithdrawMoney()}>
               Sacar dinheiro para a sua carteira
+            </Button>
+          }
+          {shouldShowMediatorAcceptSellerRequestButton() &&
+            <Button
+              fullWidth={true}
+              variant="contained"
+              color="primary"
+              onClick={() => onTakeSideOnMediation(Favored.seller)}>
+              Tomar o lado do vendedor
+            </Button>
+          }
+          {shouldShowMediatorAcceptBuyerRequestButton() &&
+            <Button
+              fullWidth={true}
+              variant="contained"
+              color="primary"
+              onClick={() => onTakeSideOnMediation(Favored.buyer)}>
+              Tomar o lado do comprador
             </Button>
           }
         </div>

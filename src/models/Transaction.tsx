@@ -17,8 +17,7 @@ export enum SellerStatus {
 }
 
 export enum EscroweeStatus {
-  notRequested = 'not requested',
-  requestedBySeller = 'requested',
+  waiting = 'waiting',
   tookBuyerSide = 'took buyer side',
   tookSellerSide = 'took seller side',
 }
@@ -76,7 +75,7 @@ export default class Transaction extends Model {
       decrypted: true,
     },
     escrowee_status: {
-      type: String,
+      type: EscroweeStatus,
       decrypted: true,
     },
     status: {
@@ -117,7 +116,7 @@ export default class Transaction extends Model {
   static defaults = {
     buyer_status: BuyerStatus.notPaid,
     seller_status: SellerStatus.waiting,
-    escrowee_status: EscroweeStatus.notRequested,
+    escrowee_status: EscroweeStatus.waiting,
     status: TransactionStatus.active,
     buyer_redeem_script: '',
     seller_redeem_script: '',
