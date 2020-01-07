@@ -59,7 +59,7 @@ export default function App() {
         setLoadingProgressShouldBe(100)
       });
     }
-  }, [])
+  }, [userSession])
 
   useEffect(() => {
     if (isUserSigned && person) return
@@ -69,7 +69,7 @@ export default function App() {
       setUsername(userSession.loadUserData().username)
       setIsUserSigned(true)
     }
-  })
+  }, [userSession, isUserSigned, person])
 
   useEffect(() => {
     if (!isLoading) return

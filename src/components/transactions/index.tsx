@@ -99,7 +99,7 @@ export default function ListTransactions() {
       <ExpansionPanelDetails>
         <Grid container spacing={3}>
           {transactions.map((t) => (
-            <Grid item xs={12}>
+            <Grid item xs={12} key={t._id}>
               <Button
                 fullWidth={true}
                 variant="contained"
