@@ -216,6 +216,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     } else {
       await onUpdateBuyerStatus(BuyerStatus.requestedEscrowee)
     }
+    setShowWithdrawWalletInput(false)
   }
 
   const onUpdateSellerStatus = async (newStatus: SellerStatus) => {
@@ -401,11 +402,16 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     setLoadingTitle('Sacando dinheiro')
     setIsLoading(true)
 
+    // define which redeemScript to use
+    const redeemScript = (whoIsViewing === WhoIsViewing.buyer)
+      ? transaction!!.attrs.buyer_redeem_script
+      : transaction!!.attrs.seller_redeem_script
+
     // decrypt redeem script
     setLoadingMessage('Assinando transação')
     const encodedPSBT = decryptECIES(
       User.currentUser().encryptionPrivateKey(),
-      transaction!!.attrs.seller_redeem_script
+      redeemScript,
     )
 
     // sign inputs
@@ -458,6 +464,25 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const shouldShowMediatorAcceptBuyerRequestButton = (): boolean => (
     whoIsViewing === WhoIsViewing.escrowee
     && transaction!!.attrs.buyer_status === BuyerStatus.requestedEscrowee
+  )
+
+  const mediatorAlreadyTookSide = (): boolean => (
+    whoIsViewing === WhoIsViewing.escrowee
+    && transaction!!.attrs.escrowee_status !== EscroweeStatus.waiting
+  )
+
+  const getMediatorAlreadyTookSideMessage = (): React.ReactElement => (
+    <Grid
+              container
+              direction="column"
+              justify="center"
+              alignItems="center"
+    >
+      {transaction!!.attrs.escrowee_status === EscroweeStatus.tookBuyerSide
+        ? "Você deu ganho de causa para o comprador"
+        : "Você deu ganho de causa para o vendedor"
+      }
+    </Grid>
   )
 
   return (
@@ -614,24 +639,29 @@ export default function ShowTransaction(props: ShowTransactionProps) {
               Sacar dinheiro para a sua carteira
             </Button>
           }
-          {shouldShowMediatorAcceptSellerRequestButton() &&
-            <Button
+        {mediatorAlreadyTookSide()
+          ? getMediatorAlreadyTookSideMessage()
+          : <div>
+            {shouldShowMediatorAcceptSellerRequestButton() &&
+              <Button
               fullWidth={true}
               variant="contained"
               color="primary"
               onClick={() => onTakeSideOnMediation(Favored.seller)}>
               Tomar o lado do vendedor
-            </Button>
-          }
-          {shouldShowMediatorAcceptBuyerRequestButton() &&
-            <Button
+              </Button>
+            }
+            {shouldShowMediatorAcceptBuyerRequestButton() &&
+              <Button
               fullWidth={true}
               variant="contained"
               color="primary"
               onClick={() => onTakeSideOnMediation(Favored.buyer)}>
               Tomar o lado do comprador
-            </Button>
-          }
+              </Button>
+            }
+          </div>
+        }
         </div>
       }
     </div >
