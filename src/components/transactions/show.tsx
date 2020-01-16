@@ -203,10 +203,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     )
     const priceToBePaid = transaction!!.attrs.bitcoin_price as number
     if (balance >= priceToBePaid) {
-      transaction!!.update({
-        buyer_status: BuyerStatus.paid,
-      })
-      await transaction!!.save()
+      await onUpdateBuyerStatus(BuyerStatus.paid)
     } else {
       setRemainingValue((priceToBePaid - balance).toFixed(8))
     }
@@ -215,9 +212,9 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
   const onSetWithdrawStatus = async () => {
     if (whoIsViewing === WhoIsViewing.seller) {
-      onUpdateSellerStatus(SellerStatus.requestedEscrowee)
+      await onUpdateSellerStatus(SellerStatus.requestedEscrowee)
     } else {
-      onUpdateBuyerStatus(BuyerStatus.requestedEscrowee)
+      await onUpdateBuyerStatus(BuyerStatus.requestedEscrowee)
     }
   }
 
@@ -258,7 +255,6 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       setLoadingProgressShouldBe(100)
       setHasAlert(true)
       setAlertMessage('Carteira sem saldo. A carteira pode estar com saldo não confirmado')
-      console.error('insufficient balance')
       return
     }
 
@@ -271,7 +267,13 @@ export default function ShowTransaction(props: ShowTransactionProps) {
     if (inputs.length === 0) {
       setLoadingProgressShouldBe(100)
       setHasAlert(true)
-      setAlertMessage('Carteira sem saldo. A carteira pode estar com saldo não confirmado')
+      setAlertMessage('Carteira sem saldo. A carteira pode estar com saldo '
+        + 'não confirmado.'
+        + '<a target="_blank"'
+        + 'href="https://live.blockcypher.com/btc-testnet/address/'
+        + transaction!!.attrs.wallet_address + '">'
+        + ' Verifique o saldo da carteira</a >.'
+      )
       console.error('the wallet does not have unspent output.')
       return
     }
@@ -297,7 +299,9 @@ export default function ShowTransaction(props: ShowTransactionProps) {
   const onTakeSideOnMediation = async (favored: Favored) => {
     setLoadingTitle('Atualizando informações da transação')
     setIsLoading(true)
-    const encryptedRedeem = createSignedRedeemScript(favored)
+    const encryptedRedeem = await createSignedRedeemScript(favored)
+    if (!encryptedRedeem) return
+
     setLoadingMessage('Salvando dados da transação')
 
     if (favored === Favored.buyer) {
@@ -321,11 +325,13 @@ export default function ShowTransaction(props: ShowTransactionProps) {
 
     switch (newStatus) {
       case BuyerStatus.received:
-        const encryptedRedeem = createSignedRedeemScript(Favored.buyer)
+        const encryptedRedeem = await createSignedRedeemScript(Favored.seller)
+        if (!encryptedRedeem) return
+
         setLoadingMessage('Salvando dados da transação')
         transaction!!.update({
           buyer_status: newStatus,
-          buyer_redeem_script: encryptedRedeem,
+          seller_redeem_script: encryptedRedeem,
         })
         await transaction!!.save()
         break
@@ -335,6 +341,13 @@ export default function ShowTransaction(props: ShowTransactionProps) {
           buyer_wallet: withdrawWallet,
         })
         await transaction!!.save()
+        break
+      case BuyerStatus.paid:
+        transaction!!.update({
+          buyer_status: newStatus,
+        })
+        await transaction!!.save()
+        break
     }
 
     setLoadingProgressShouldBe(100)
@@ -462,9 +475,7 @@ export default function ShowTransaction(props: ShowTransactionProps) {
       >
         <DialogTitle id="alert-dialog-title">Houve um erro</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {alertMessage}
-          </DialogContentText>
+          <div dangerouslySetInnerHTML={{__html: alertMessage}}></div>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setHasAlert(false)} color="primary">
