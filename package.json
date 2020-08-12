@@ -24,7 +24,7 @@
     "react-images-upload": "^1.2.7",
     "react-router-dom": "5.1.2",
     "react-scripts": "3.0.1",
-    "serialize-javascript": "2.1.1",
+    "serialize-javascript": "3.1.0",
     "typescript": "^3.4.5",
     "wallet-address-validator": "^0.2.4"
   },
